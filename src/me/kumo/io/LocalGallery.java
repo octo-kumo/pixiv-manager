@@ -13,6 +13,10 @@ public class LocalGallery {
         FILES = new File(PATH).listFiles((dir, name) -> name.endsWith(".jpg") || name.endsWith(".png"));
     }
 
+    public static String getImage(long illusID) throws IOException {
+        return getImage(String.valueOf(illusID));
+    }
+
     public static String getImage(String illusID) throws IOException {
         Optional<File> file = Arrays.stream(FILES).filter(f -> f.getName().startsWith(illusID)).findAny();
         return file.map(File::getAbsolutePath).orElse(null);

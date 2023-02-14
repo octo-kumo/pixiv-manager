@@ -41,7 +41,7 @@ public class Gallery extends JPanel implements ComponentListener {
     public void refresh() {
         Illustration[] illustrations = filter.filter(Loader.illustrations);
         grid.removeAll();
-        grid.setLayout(new GridLayout(0, Math.min(colCount, illustrations.length), 10, 10));
+        grid.setLayout(new GridLayout(0, Math.max(1, Math.min(colCount, illustrations.length)), 10, 10));
         freePool.addAll(usedPool);
         usedPool.clear();
         for (Illustration illustration : illustrations) {

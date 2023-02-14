@@ -7,14 +7,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class GalleryItem extends JPanel implements MouseListener {
     public final GalleryImage image;
-    private final JLabel id;
-    private final Box info;
+    private final IllustrationInfo info;
+    private final Box controls;
     private boolean shown;
     private Illustration illustration;
 
@@ -23,31 +24,17 @@ public class GalleryItem extends JPanel implements MouseListener {
 
         setPreferredSize(new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE));
 
-        id = new JLabel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                g.setXORMode(Color.white);
-                super.paintComponent(g);
-            }
-        };
-        id.setAlignmentX(CENTER_ALIGNMENT);
         addMouseListener(this);
-        add(info = new Box(BoxLayout.Y_AXIS) {{
+        add(controls = new Box(BoxLayout.Y_AXIS) {{
             setVisible(false);
-            add(id);
             add(new JButton("Open Pixiv") {{
-                addActionListener(e -> {
-                    if (illustration != null) {
-                        try {
-                            Desktop.getDesktop().browse(new URI("https://pixiv.net/en/artworks/" + illustration.getId()));
-                        } catch (IOException | URISyntaxException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                });
+                addActionListener(e -> open(illustration));
             }});
-//            add(new JButton("Open Image"));
+            add(new JButton("Open Image") {{
+                addActionListener(e -> openFile(illustration));
+            }});
         }});
+        add(info = new IllustrationInfo());
         add(image = new GalleryImage());
     }
 
@@ -64,7 +51,7 @@ public class GalleryItem extends JPanel implements MouseListener {
         }
         setVisible(true);
         try {
-            id.setText(illustration.getId().toString());
+            info.setIllustration(illustration);
             this.image.setImage(LocalGallery.getImage(String.valueOf(illustration.getId())));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -97,12 +84,31 @@ public class GalleryItem extends JPanel implements MouseListener {
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        info.setVisible(true);
+        controls.setVisible(true);
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
         if (!new Rectangle(getLocationOnScreen(), getSize()).contains(e.getLocationOnScreen()))
-            info.setVisible(false);
+            controls.setVisible(false);
+    }
+
+
+    public static void open(Illustration illustration) {
+        if (illustration == null) return;
+        try {
+            Desktop.getDesktop().browse(new URI("https://pixiv.net/artworks/" + illustration.getId()));
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void openFile(Illustration illustration) {
+        if (illustration == null) return;
+        try {
+            Desktop.getDesktop().open(new File(LocalGallery.getImage(illustration.getId())));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
