@@ -4,11 +4,12 @@ plugins {
 }
 
 group = 'me.kumo'
-version = '0.0.1'
+version = '0.0.2'
 application {
     mainClass = 'me.kumo.Main'
 }
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 sourceSets {

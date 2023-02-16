@@ -12,11 +12,6 @@ public class IllustrationInfo extends JComponent {
 
     public IllustrationInfo() {
         setForeground(Color.WHITE);
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-    }
-
-    public Illustration getIllustration() {
-        return illustration;
     }
 
     public void setIllustration(Illustration illustration) {

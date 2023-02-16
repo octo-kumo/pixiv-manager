@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 public class FilterOptions extends JPanel implements ActionListener {
     private final TristateCheckBox r18;
     private final TristateCheckBox visible;
+    private final TristateCheckBox restrict;
     private final FilterPane filterPane;
 
     public FilterOptions(FilterPane filterPane) {
@@ -25,11 +26,15 @@ public class FilterOptions extends JPanel implements ActionListener {
         add(visible = new TristateCheckBox("Visible", null, TristateState.INDETERMINATE_SEL) {{
             addActionListener(FilterOptions.this);
         }});
+        add(restrict = new TristateCheckBox("Restricted", null, TristateState.INDETERMINATE_SEL) {{
+            addActionListener(FilterOptions.this);
+        }});
     }
 
     public boolean test(Illustration illustration) {
         TristateState r18 = this.r18.getState();
         TristateState visible = this.visible.getState();
+        TristateState restrict = this.restrict.getState();
         if (!r18.isIndeterminate())
             if (r18 == TristateState.SELECTED && illustration.getXRestrict() == 0) {
                 return false;
@@ -41,6 +46,14 @@ public class FilterOptions extends JPanel implements ActionListener {
             if (visible == TristateState.SELECTED && !illustration.isVisible()) {
                 return false;
             } else if (visible == TristateState.DESELECTED && illustration.isVisible()) {
+                return false;
+            }
+
+
+        if (!restrict.isIndeterminate())
+            if (restrict == TristateState.SELECTED && illustration.getRestrict() == 0) {
+                return false;
+            } else if (restrict == TristateState.DESELECTED && illustration.getRestrict() != 0) {
                 return false;
             }
 

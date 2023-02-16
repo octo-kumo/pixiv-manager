@@ -16,8 +16,8 @@ public class GalleryItem extends JPanel implements MouseListener {
     public final GalleryImage image;
     private final IllustrationInfo info;
     private final Box controls;
-    private boolean shown;
     private Illustration illustration;
+    private boolean shown;
 
     public GalleryItem() {
         setLayout(new OverlayLayout(this));

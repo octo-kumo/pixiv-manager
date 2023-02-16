@@ -13,29 +13,21 @@ import java.util.Objects;
 
 public class GalleryImage extends JComponent implements ComponentListener {
     public static final int GRID_SIZE = 200;
+
+    private SwingWorker<BufferedImage, String> worker;
     private BufferedImage thumbnail;
     private String file;
     private boolean shown;
-    public SwingWorker<BufferedImage, String> worker;
 
     public GalleryImage() {
-        this(null);
-    }
-
-    public GalleryImage(BufferedImage image) {
         addComponentListener(this);
-        setThumbnail(image);
         setPreferredSize(new Dimension(GRID_SIZE, GRID_SIZE));
-    }
-
-    public void setThumbnail(BufferedImage thumbnail) {
-        this.thumbnail = thumbnail;
     }
 
     public void setImage(String file) {
         if (!Objects.equals(this.file, this.file = file)) {
             this.thumbnail = null;
-            refreshThumbnail();
+            loadImage();
         }
     }
 
@@ -52,7 +44,7 @@ public class GalleryImage extends JComponent implements ComponentListener {
         if (shown == this.shown) return;
         this.shown = shown;
         if (shown) {
-            refreshThumbnail();
+            loadImage();
         } else {
             if (worker != null) {
                 worker.cancel(true);
@@ -64,10 +56,10 @@ public class GalleryImage extends JComponent implements ComponentListener {
     @Override
     public void componentResized(ComponentEvent e) {
         thumbnail = null;
-        refreshThumbnail();
+        loadImage();
     }
 
-    private void refreshThumbnail() {
+    private void loadImage() {
         if (!(this.file != null && shown && thumbnail == null)) return;
         if (worker != null) worker.cancel(true);
         final String FILE_PATH = file;
@@ -80,7 +72,7 @@ public class GalleryImage extends JComponent implements ComponentListener {
             @Override
             protected void done() {
                 try {
-                    setThumbnail(get());
+                    thumbnail = get();
                     GalleryImage.this.repaint();
                 } catch (Exception ignored) {
                     worker = null;
@@ -96,9 +88,11 @@ public class GalleryImage extends JComponent implements ComponentListener {
 
     @Override
     public void componentShown(ComponentEvent e) {
+        shown = true;
     }
 
     @Override
     public void componentHidden(ComponentEvent e) {
+        shown = false;
     }
 }

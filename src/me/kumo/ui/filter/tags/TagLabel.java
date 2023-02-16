@@ -5,34 +5,21 @@ import com.github.weisj.darklaf.iconset.AllIcons;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-public class TagLabel extends JLabel implements MouseListener {
-
-    private ActionListener actionListener;
-
-    public TagLabel(String tag) {
-        super(tag, AllIcons.Window.Close.get(), CENTER);
-        addMouseListener(this);
-
-        setBorder(new LineBorder(getForeground(), 1));
-    }
+public class TagLabel extends JButton implements MouseListener {
 
     public TagLabel(String tag, ActionListener listener) {
-        this(tag);
-        setActionListener(listener);
-    }
-
-    public void setActionListener(ActionListener actionListener) {
-        this.actionListener = actionListener;
+        super(tag, AllIcons.Window.Close.get());
+        addMouseListener(this);
+        addActionListener(listener);
+        setBorder(new LineBorder(getForeground(), 1));
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        actionListener.actionPerformed(new ActionEvent(e.getSource(), e.getID(), e.paramString()));
     }
 
     @Override
