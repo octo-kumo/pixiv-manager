@@ -9,12 +9,16 @@ import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Stack;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<Illustration[]> {
+public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>> {
     private final JPanel grid;
     private final Stack<GalleryItem> usedPool = new Stack<>();
-    private final Stack<GalleryItem> freePool = new Stack<>();
+    private final HashMap<Long, GalleryItem> freePool = new HashMap<>();
     private int colCount;
 
     public Gallery() {
@@ -28,33 +32,34 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         getScrollPane().setViewportView(this.grid);
         getVerticalScrollBar().setUnitIncrement(32);
 
-        setPreferredSize(new Dimension(1280, 720));
+        setPreferredSize(new Dimension(720, 480));
         getScrollPane().getViewport().addChangeListener(e -> updateShownStatus());
         addComponentListener(this);
     }
 
     private void updateShownStatus() {
         Rectangle visibleRect = getScrollPane().getViewport().getViewRect();
-        Arrays.stream(grid.getComponents())
-                .forEach(component -> ((GalleryItem) component)
-                        .setShown(component.getBounds().intersects(visibleRect)));
+        Arrays.stream(grid.getComponents()).forEach(component -> ((GalleryItem) component).setShown(component.getBounds().intersects(visibleRect)));
     }
 
-    public void refresh(Illustration[] illustrations) {
+    public void refresh(List<Illustration> illustrations) {
         grid.removeAll();
-        updateLayout(illustrations.length);
-        freePool.addAll(usedPool);
+        updateLayout(illustrations.size());
+        freePool.putAll(usedPool.stream().collect(Collectors.toMap((GalleryItem galleryItem) -> galleryItem.getIllustration().getId(), Function.identity(), (a, b) -> a)));
         usedPool.clear();
         for (Illustration illustration : illustrations) {
-            if (freePool.empty()) freePool.add(new GalleryItem());
-            GalleryItem holder = freePool.pop();
+            GalleryItem holder = freePool.remove(illustration.getId());
+            if (holder == null) holder = new GalleryItem();
+            holder.refresh(illustration);
             usedPool.push(holder);
-            holder.setIllustration(illustration);
             grid.add(holder);
         }
-        revalidate();
-        updateShownStatus();
-        repaint();
+        SwingUtilities.invokeLater(() -> {
+            revalidate();
+            usedPool.forEach(JComponent::revalidate);
+            updateShownStatus();
+            repaint();
+        });
     }
 
     private void updateLayout(int count) {
@@ -77,5 +82,9 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
 
     @Override
     public void componentHidden(ComponentEvent e) {
+    }
+
+    public void tapGallery() {
+        usedPool.forEach(GalleryItem::updateImage);
     }
 }

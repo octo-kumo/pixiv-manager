@@ -24,6 +24,10 @@ public class GalleryImage extends JComponent implements ComponentListener {
         setPreferredSize(new Dimension(GRID_SIZE, GRID_SIZE));
     }
 
+    public boolean found() {
+        return file != null;
+    }
+
     public void setImage(String file) {
         if (!Objects.equals(this.file, this.file = file)) {
             this.thumbnail = null;
@@ -59,7 +63,7 @@ public class GalleryImage extends JComponent implements ComponentListener {
     }
 
     private void loadImage() {
-        if (!(this.file != null && shown && thumbnail == null)) return;
+        if (this.file == null || !shown || thumbnail != null) return;
         if (worker != null) worker.cancel(true);
         final String FILE_PATH = file;
         worker = new SwingWorker<>() {

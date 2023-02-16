@@ -3,33 +3,43 @@ package me.kumo.ui.control;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.filter.OptionFilter;
+import me.kumo.ui.control.filter.SearchFilter;
 import me.kumo.ui.control.filter.TagFilter;
 import me.kumo.ui.control.filter.ToolFilter;
 
 import javax.swing.*;
-import java.util.Arrays;
+import javax.swing.border.TitledBorder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class ControlPane extends Box implements Refreshable<Illustration[]> {
+public class ControlPane extends Box implements Refreshable<List<Illustration>> {
+    private final SearchFilter searchFilter;
+    private final OptionFilter optionFilter;
     private final TagFilter tagFilter;
-    private final SortPane sorters;
-    private final OptionFilter options;
     private final ToolFilter toolFilter;
-    private final Refreshable<Illustration[]> parent;
-    private final Supplier<Illustration[]> supplier;
+    private final SortPane sorters;
+    private final Refreshable<List<Illustration>> parent;
+    private final Supplier<ArrayList<Illustration>> supplier;
+    private final Box advancedStuff;
+    private boolean advancedControls = false;
 
-    public ControlPane(Refreshable<Illustration[]> parent, Supplier<Illustration[]> supplier) {
+    public ControlPane(Refreshable<List<Illustration>> parent, Supplier<ArrayList<Illustration>> supplier) {
         super(BoxLayout.Y_AXIS);
         this.parent = parent;
         this.supplier = supplier;
-        add(sorters = new SortPane(this));
-        add(options = new OptionFilter(this));
-        add(tagFilter = new TagFilter(this));
-        add(toolFilter = new ToolFilter(this));
+        add(searchFilter = new SearchFilter(this));
+        add(advancedStuff = Box.createVerticalBox());
+        advancedStuff.setBorder(new TitledBorder("Advanced Options"));
+        advancedStuff.add(optionFilter = new OptionFilter(this));
+        advancedStuff.add(tagFilter = new TagFilter(this));
+        advancedStuff.add(toolFilter = new ToolFilter(this));
+        advancedStuff.add(sorters = new SortPane(this));
+        advancedStuff.setVisible(false);
     }
 
-    public void refresh(Illustration[] illustrations) {
+    public void refresh(List<Illustration> illustrations) {
         tagFilter.refresh(illustrations);
         toolFilter.refresh(illustrations);
         revalidate();
@@ -37,16 +47,34 @@ public class ControlPane extends Box implements Refreshable<Illustration[]> {
     }
 
     public void applyAll() {
-        parent.refresh(filter(supplier.get()));
+        parent.refresh(filterAndSort(supplier.get()));
     }
 
-    public Illustration[] filter(Illustration[] illustrations) {
-        Stream<Illustration> stream = Arrays.stream(illustrations);
-        stream = options.filter(stream);
+    public void reset() {
+        searchFilter.reset();
+        optionFilter.reset();
+        tagFilter.reset();
+        toolFilter.reset();
+        sorters.reset();
+    }
+
+    public List<Illustration> filterAndSort(ArrayList<Illustration> illustrations) {
+        Stream<Illustration> stream = illustrations.stream();
+        stream = searchFilter.filter(stream);
+        stream = optionFilter.filter(stream);
         stream = tagFilter.filter(stream);
         stream = toolFilter.filter(stream);
         stream = sorters.sort(stream);
-        return stream.toArray(Illustration[]::new);
+        return stream.toList();
+    }
+
+    public boolean isAdvancedControls() {
+        return advancedControls;
+    }
+
+    public void setAdvancedControls(boolean advancedControls) {
+        this.advancedControls = advancedControls;
+        advancedStuff.setVisible(advancedControls);
     }
 }
 

@@ -1,9 +1,13 @@
 package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
+import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
+import me.kumo.io.pixiv.Pixiv;
+import me.kumo.ui.Refreshable;
+import me.kumo.ui.utils.FileTransferable;
 import me.kumo.ui.utils.IconButton;
 
 import javax.swing.*;
@@ -14,8 +18,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-public class GalleryItem extends JPanel implements MouseListener {
+public class GalleryItem extends JPanel implements MouseListener, Refreshable<Illustration> {
     public final GalleryImage image;
     private final IllustrationInfo info;
     private final ItemToolbar controls;
@@ -31,11 +37,6 @@ public class GalleryItem extends JPanel implements MouseListener {
         add(controls = new ItemToolbar());
         add(info = new IllustrationInfo());
         add(image = new GalleryImage());
-    }
-
-    public GalleryItem(Illustration illustration) {
-        this();
-        setIllustration(illustration);
     }
 
     public static void open(Illustration illustration) {
@@ -56,19 +57,28 @@ public class GalleryItem extends JPanel implements MouseListener {
         }
     }
 
-    public void setIllustration(Illustration illustration) {
-        this.illustration = illustration;
+    public static void copyFile(Illustration illustration) {
+        FileTransferable ft = new FileTransferable(List.of(new File(LocalGallery.getImage(illustration.getId()))));
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) ->
+                System.out.println("Lost ownership"));
+    }
+
+
+    public Illustration getIllustration() {
+        return illustration;
+    }
+
+    @Override
+    public void refresh(Illustration illustration) {
+        if (this.illustration == (this.illustration = illustration)) return;
         if (illustration == null) {
             setVisible(false);
             return;
         }
         setVisible(true);
-        try {
-            info.setIllustration(illustration);
-            this.image.setImage(LocalGallery.getImage(String.valueOf(illustration.getId())));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        updateImage();
+        info.setIllustration(illustration);
+        controls.refresh(illustration);
     }
 
     public boolean isShown() {
@@ -106,15 +116,63 @@ public class GalleryItem extends JPanel implements MouseListener {
             controls.setVisible(false);
     }
 
-    private class ItemToolbar extends JPanel {
+    public void updateImage() {
+        this.image.setImage(LocalGallery.getImage(String.valueOf(illustration.getId())));
+    }
+
+    private class ItemToolbar extends JPanel implements Refreshable<Illustration> {
+        private final IconButton refresh;
+        private final IconButton file;
+        private final IconButton copy;
+        private final LoadingIndicator refreshProgress;
+        private SwingWorker<Boolean, String> worker;
+
         public ItemToolbar() {
             super(new FlowLayout(FlowLayout.TRAILING));
             setOpaque(false);
             setVisible(false);
             setAlignmentY(Component.BOTTOM_ALIGNMENT);
             setBackground(new Color(0x0, true));
+
+            add(refreshProgress = new LoadingIndicator(AllIcons.Action.Refresh.get()) {{
+                setVisible(false);
+            }});
+            add(refresh = new IconButton(AllIcons.Action.Refresh.get(), e -> {
+                worker = new SwingWorker<>() {
+                    @Override
+                    protected Boolean doInBackground() {
+                        refreshProgress.setVisible(true);
+                        refreshProgress.setRunning(true);
+                        refresh.setVisible(false);
+                        return LocalGallery.downloadIllustration(Pixiv.getInstance(), illustration);
+                    }
+
+                    @Override
+                    protected void done() {
+                        try {
+                            refreshProgress.setVisible(false);
+                            if (get()) {
+                                updateImage();
+                                refresh(illustration);
+                            } else refresh.setVisible(true);
+                        } catch (InterruptedException | ExecutionException ignored) {
+                        }
+                    }
+                };
+                worker.execute();
+            }));
+
             add(new IconButton(Icons.Pixiv, e -> open(illustration)));
-            add(new IconButton(AllIcons.Files.Image.get(), e -> openFile(illustration)));
+            add(copy = new IconButton(AllIcons.Action.Copy.get(), e -> copyFile(illustration)));
+            add(file = new IconButton(AllIcons.Files.Image.get(), e -> openFile(illustration)));
+        }
+
+        @Override
+        public void refresh(Illustration illustration) {
+            refreshProgress.setVisible(false);
+            refresh.setVisible(!image.found());
+            copy.setVisible(image.found());
+            file.setVisible(image.found());
         }
     }
 }

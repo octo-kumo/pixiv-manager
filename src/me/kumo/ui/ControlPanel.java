@@ -6,30 +6,44 @@ import me.kumo.ui.gallery.Gallery;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
-public class ControlPanel extends JPanel implements Refreshable<Illustration[]>, Supplier<Illustration[]> {
-    private final ControlPane filter;
-    private final Gallery gallery;
-    private final Illustration[] illustrations;
+public class ControlPanel extends JPanel implements Refreshable<List<Illustration>>, Supplier<ArrayList<Illustration>> {
+    protected final ControlPane filter;
+    protected final Gallery gallery;
 
-    public ControlPanel(Illustration[] illustrations) {
+
+    protected ArrayList<Illustration> illustrations;
+
+    public ControlPanel() {
         super(new BorderLayout());
-        this.illustrations = illustrations;
-        setPreferredSize(new Dimension(1280, 720));
         add(filter = new ControlPane(this, this), BorderLayout.NORTH);
-        add(gallery = new Gallery());
-        refresh(illustrations);
+        add(gallery = new Gallery(), BorderLayout.CENTER);
     }
 
     @Override
-    public void refresh(Illustration[] illustrations) {
+    public void refresh(List<Illustration> illustrations) {
         filter.refresh(illustrations);
         gallery.refresh(illustrations);
     }
 
     @Override
-    public Illustration[] get() {
+    public ArrayList<Illustration> get() {
         return illustrations;
+    }
+
+    public ArrayList<Illustration> getIllustrations() {
+        return illustrations;
+    }
+
+    public void setIllustrations(ArrayList<Illustration> illustrations) {
+        this.illustrations = illustrations;
+        filter.applyAll();
+    }
+
+    public void tapGallery() {
+        gallery.tapGallery();
     }
 }

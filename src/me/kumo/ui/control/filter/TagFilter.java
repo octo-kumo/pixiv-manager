@@ -9,19 +9,20 @@ import me.kumo.ui.control.ControlPane;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import static me.kumo.io.Loader.getTags;
+import static me.kumo.io.Process.getTags;
 
-public class TagFilter extends JPanel implements IllustrationFilter, Refreshable<Illustration[]> {
+public class TagFilter extends JPanel implements IllustrationFilter, Refreshable<List<Illustration>> {
     private final Set<String> selectedTags = new HashSet<>();
     private final JComboBox<String> combobox;
     private final JPanel filtersPanel;
@@ -29,6 +30,7 @@ public class TagFilter extends JPanel implements IllustrationFilter, Refreshable
 
     public TagFilter(ControlPane controlPane) {
         super(new BorderLayout());
+        setBorder(new EmptyBorder(0, 5, 0, 5));
         this.controlPane = controlPane;
         add(combobox = new JComboBox<>() {{
             setPreferredSize(new Dimension(200, getPreferredSize().height));
@@ -49,23 +51,23 @@ public class TagFilter extends JPanel implements IllustrationFilter, Refreshable
     }
 
     @Override
-    public void refresh(Illustration[] illustrations) {
+    public void refresh(List<Illustration> illustrations) {
         filtersPanel.removeAll();
         selectedTags.forEach(tag -> filtersPanel.add(new TagLabel(tag, e -> {
             selectedTags.remove(tag);
             SwingUtilities.invokeLater(controlPane::applyAll);
         })));
-        combobox.setModel(new DefaultComboBoxModel<>(getTags(filter(Arrays.stream(illustrations)))
-                .map(t -> Objects.requireNonNullElse(t.getTranslatedName(), t.getName()))
-                .filter(tag -> !selectedTags.contains(tag))
-                .toArray(String[]::new)));
+        combobox.setModel(new DefaultComboBoxModel<>(getTags(filter(illustrations.stream())).map(t -> Objects.requireNonNullElse(t.getTranslatedName(), t.getName())).filter(tag -> !selectedTags.contains(tag)).toArray(String[]::new)));
+    }
+
+    @Override
+    public void reset() {
+        selectedTags.clear();
     }
 
     @Override
     public boolean test(Illustration illustration) {
-        return selectedTags.stream().allMatch(tag ->
-                illustration.getTags().stream().anyMatch(t ->
-                        Objects.equals(t.getTranslatedName(), tag) || Objects.equals(t.getName(), tag)));
+        return selectedTags.stream().allMatch(tag -> illustration.getTags().stream().anyMatch(t -> Objects.equals(t.getTranslatedName(), tag) || Objects.equals(t.getName(), tag)));
     }
 
     public static class TagLabel extends JButton implements MouseListener {
@@ -74,6 +76,7 @@ public class TagFilter extends JPanel implements IllustrationFilter, Refreshable
             super(tag, AllIcons.Window.Close.get());
             addMouseListener(this);
             addActionListener(listener);
+            setMargin(new Insets(0, 0, 0, 0));
             setBorder(new LineBorder(getForeground(), 1));
         }
 

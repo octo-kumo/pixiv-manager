@@ -15,6 +15,12 @@ public class BookmarkFilter {
     private Integer limit;
     @SerializedName("restrict")
     private Restrict restrict = Restrict.PUBLIC;
+    @SerializedName("mode")
+    private Mode mode = Mode.ALL;
+
+    public BookmarkFilter(String userId) {
+        setUserID(userId);
+    }
 
     @NonNull
     public static BookmarkFilter fromUrl(@NonNull String url) throws IllegalArgumentException {
@@ -54,11 +60,24 @@ public class BookmarkFilter {
         this.restrict = restrict;
     }
 
+    public Mode getMode() {
+        return mode;
+    }
+
+    public void setMode(Mode mode) {
+        this.mode = mode;
+    }
+
     public enum Restrict {
         @SerializedName("public")
         PUBLIC,
         @SerializedName("private")
         PRIVATE
+    }
+
+    public enum Mode {
+        @SerializedName("all")
+        ALL
     }
 
 }

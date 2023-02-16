@@ -8,42 +8,36 @@ import com.github.hanshsieh.pixivj.model.User;
 import com.github.hanshsieh.pixivj.oauth.PixivOAuthClient;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import javax.swing.*;
 import java.io.IOException;
-import java.time.Instant;
+import java.util.function.Consumer;
 
-public class Pixiv {
-    private final PixivApiClient client;
+public class Pixiv extends PixivApiClient {
+
+    private static Pixiv instance;
 
     public Pixiv() {
-        UserRefresher tokenProvider = new UserRefresher(new PixivOAuthClient.Builder().build());
-        tokenProvider.updateTokens("", System.getenv("PIXIV_TOKEN"), Instant.now());
-        this.client = new PixivApiClient.Builder().setTokenProvider(tokenProvider).build();
-        tokenProvider.setOnLoad(this::refresh);
-        try {
-            tokenProvider.getAccessToken();
-        } catch (AuthException | IOException e) {
-            throw new RuntimeException(e);
-        }
+        super(new PixivApiClient.Builder().setTokenProvider(new UserRefresher(new PixivOAuthClient.Builder().build(), System.getenv("PIXIV_TOKEN"))));
+        instance = this;
+        SwingUtilities.invokeLater(() -> {
+            try {
+                System.out.println("Access Token :: " + tokenProvider.getAccessToken());
+            } catch (AuthException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static Pixiv getInstance() {
+        return instance;
     }
 
     @NonNull
     public SearchedIllusts bookmarks(@NonNull BookmarkFilter filter) throws PixivException, IOException {
-        return client.sendGetRequest("v1/user/bookmarks/illust", filter, SearchedIllusts.class);
+        return sendGetRequest("v1/user/bookmarks/illust", filter, SearchedIllusts.class);
     }
 
-    public void refresh(User user) {
-        try {
-            System.out.println("Logged in as " + user.getName());
-            BookmarkFilter filter = new BookmarkFilter();
-            filter.setUserID(user.getId());
-            filter.setLimit(30);
-            SearchedIllusts bookmarks = bookmarks(filter);
-            System.out.println("bookmarks: " + bookmarks.getIllusts().size());
-            System.out.println("next: " + bookmarks.getNextUrl());
-//            RecommendedIllusts illusts = client.getRecommendedIllusts(new RecommendedIllustsFilter());
-//            System.out.println(illusts.getIllusts());
-        } catch (PixivException | IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void onLoad(Consumer<User> consumer) {
+        ((UserRefresher) tokenProvider).setOnLoad(consumer);
     }
 }

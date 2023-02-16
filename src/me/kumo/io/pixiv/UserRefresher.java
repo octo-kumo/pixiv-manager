@@ -11,7 +11,6 @@ import org.apache.commons.lang3.Validate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Consumer;
 
@@ -22,12 +21,9 @@ public class UserRefresher extends LazyTokenRefresher {
     private Consumer<User> loaded = user -> {
     };
 
-    public UserRefresher(@NonNull PixivOAuthClient client) {
+    public UserRefresher(@NonNull PixivOAuthClient client, String token) {
         super(client);
-    }
-
-    public UserRefresher(@NonNull PixivOAuthClient client, @NonNull Duration expireTolerance) {
-        super(client, expireTolerance);
+        updateTokens("", token, Instant.now());
     }
 
     public void setOnLoad(Consumer<User> loaded) {

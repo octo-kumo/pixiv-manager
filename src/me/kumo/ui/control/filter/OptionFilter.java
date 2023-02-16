@@ -3,63 +3,63 @@ package me.kumo.ui.control.filter;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
 import com.github.weisj.darklaf.components.tristate.TristateState;
+import me.kumo.io.LocalGallery;
 import me.kumo.ui.control.ControlPane;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.function.Function;
 
 public class OptionFilter extends JPanel implements ActionListener, IllustrationFilter {
-    private final TristateCheckBox r18;
-    private final TristateCheckBox visible;
-    private final TristateCheckBox restrict;
     private final ControlPane controlPane;
+    private final ArrayList<ToggleOption> options;
 
     public OptionFilter(ControlPane controlPane) {
         super(new FlowLayout(FlowLayout.LEADING));
         this.controlPane = controlPane;
-        add(r18 = new TristateCheckBox("R-18", null, TristateState.INDETERMINATE_SEL) {{
-            addActionListener(OptionFilter.this);
-        }});
-        add(visible = new TristateCheckBox("Visible", null, TristateState.INDETERMINATE_SEL) {{
-            addActionListener(OptionFilter.this);
-        }});
-        add(restrict = new TristateCheckBox("Restricted", null, TristateState.INDETERMINATE_SEL) {{
-            addActionListener(OptionFilter.this);
-        }});
+        options = new ArrayList<>();
+        options.add(new ToggleOption("R-18", i -> i.getXRestrict() != 0, this));
+        options.add(new ToggleOption("Visible", Illustration::isVisible, this));
+        options.add(new ToggleOption("Restricted", i -> i.getRestrict() != 0, this));
+        options.add(new ToggleOption("Missing", i -> LocalGallery.getImage(i.getId()) == null, this));
+        options.forEach(this::add);
     }
 
     public boolean test(Illustration illustration) {
-        TristateState r18 = this.r18.getState();
-        TristateState visible = this.visible.getState();
-        TristateState restrict = this.restrict.getState();
-        if (!r18.isIndeterminate())
-            if (r18 == TristateState.SELECTED && illustration.getXRestrict() == 0) {
-                return false;
-            } else if (r18 == TristateState.DESELECTED && illustration.getXRestrict() != 0) {
-                return false;
-            }
+        return options.stream().allMatch(o -> o.test(illustration));
+    }
 
-        if (!visible.isIndeterminate())
-            if (visible == TristateState.SELECTED && !illustration.isVisible()) {
-                return false;
-            } else if (visible == TristateState.DESELECTED && illustration.isVisible()) {
-                return false;
-            }
-
-
-        if (!restrict.isIndeterminate())
-            if (restrict == TristateState.SELECTED && illustration.getRestrict() == 0) {
-                return false;
-            } else return restrict != TristateState.DESELECTED || illustration.getRestrict() == 0;
-
-
-        return true;
+    @Override
+    public void reset() {
+        options.forEach(ToggleOption::reset);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         SwingUtilities.invokeLater(controlPane::applyAll);
+    }
+
+    public static class ToggleOption extends TristateCheckBox implements IllustrationFilter {
+        private final Function<Illustration, Boolean> checker;
+
+        public ToggleOption(String name, Function<Illustration, Boolean> checker, ActionListener actionListener) {
+            super(name, null, TristateState.INDETERMINATE_SEL);
+            this.checker = checker;
+            addActionListener(actionListener);
+        }
+
+        @Override
+        public void reset() {
+            setState(TristateState.INDETERMINATE_SEL);
+        }
+
+        @Override
+        public boolean test(Illustration illustration) {
+            if (getState().isIndeterminate()) return true;
+            return !checker.apply(illustration) ^ isSelected();
+        }
     }
 }

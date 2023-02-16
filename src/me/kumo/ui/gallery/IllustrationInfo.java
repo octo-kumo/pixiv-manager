@@ -2,55 +2,62 @@ package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.Icons;
-import me.kumo.io.ImageUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
 
-public class IllustrationInfo extends JComponent {
-    private Illustration illustration;
+public class IllustrationInfo extends JPanel {
+    public static final Color TRANSPARENT = new Color(0, true);
+    private JLabel id;
+    private JLabel views;
+    private JLabel bookmarks;
+    private JLabel r18;
+    private JLabel pageNumber;
 
     public IllustrationInfo() {
-        setForeground(Color.WHITE);
+        super(new BorderLayout());
+        setOpaque(false);
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        add(new Box(BoxLayout.Y_AXIS) {
+            protected void paintComponent(Graphics g) {
+                g.setColor(new Color(0xaa000000, true));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                super.paintComponent(g);
+            }
+
+            {
+                setBorder(new EmptyBorder(5, 5, 5, 5));
+                add(id = new JLabel(Icons.Empty));
+                add(views = new JLabel(Icons.Eye));
+                add(bookmarks = new JLabel(Icons.Heart));
+            }
+        }, BorderLayout.NORTH);
+        add(new Box(BoxLayout.X_AXIS) {{
+            add(r18 = new JLabel("R-18") {{
+                setForeground(Color.WHITE);
+                setBackground(Color.RED);
+                setFont(getFont().deriveFont(Font.BOLD));
+                setBorder(new MatteBorder(2, 4, 2, 4, Color.RED));
+                setOpaque(true);
+            }});
+            add(Box.createHorizontalGlue());
+            add(pageNumber = new JLabel() {{
+                setBackground(Color.GRAY);
+                setBorder(new MatteBorder(2, 4, 2, 4, Color.GRAY));
+                setOpaque(true);
+            }});
+        }}, BorderLayout.SOUTH);
     }
 
     public void setIllustration(Illustration illustration) {
-        this.illustration = illustration;
-        repaint();
-    }
+        id.setText(String.valueOf(illustration.getId()));
+        bookmarks.setText(String.valueOf(illustration.getTotalBookmarks()));
+        views.setText(String.valueOf(illustration.getTotalView()));
 
-    @Override
-    public void paintComponent(Graphics g1d) {
-        if (illustration == null) return;
-        Graphics2D g = (Graphics2D) g1d;
-        g.setRenderingHints(ImageUtils.RENDERING_HINTS);
-
-        g.setColor(new Color(0xaa000000, true));
-        g.fillRect(0, 0, getWidth(), 48);
-
-        g.setColor(UIManager.getColor("Label.foreground"));
-
-        g.drawString(String.valueOf(illustration.getId()), 0, 12);
-
-        Icons.Heart.paintIcon(null, g, 0, 16);
-        g.drawString(String.valueOf(illustration.getTotalBookmarks()), 16, 28);
-        Icons.Eye.paintIcon(null, g, 0, 32);
-        g.drawString(String.valueOf(illustration.getTotalView()), 16, 44);
-
-        if (illustration.getXRestrict() != 0) {
-            g.setColor(Color.RED);
-            g.fillRect(0, getHeight() - 16, g.getFontMetrics().stringWidth("R18"), 16);
-            g.setColor(Color.WHITE);
-            g.drawString("R18", 0, getHeight() - 4);
-        }
-
-        if (illustration.getPageCount() != 1) {
-            g.setColor(Color.GRAY);
-            String count = String.valueOf(illustration.getPageCount());
-            int width = g.getFontMetrics().stringWidth(count);
-            g.fillRect(getWidth() - width, getHeight() - 16, width, 16);
-            g.setColor(Color.WHITE);
-            g.drawString(count, getWidth() - width, getHeight() - 4);
-        }
+        r18.setVisible(illustration.getXRestrict() != 0);
+        pageNumber.setVisible(illustration.getPageCount() != 1);
+        pageNumber.setText(String.valueOf(illustration.getPageCount()));
     }
 }

@@ -11,5 +11,4 @@ public class Icons {
     public static final Icon Heart = IconSet.iconLoader().getIcon("/icons/heart.svg", true);
     public static final Icon Eye = IconSet.iconLoader().getIcon("/icons/eye.svg", true);
     public static final Icon Pixiv = IconSet.iconLoader().getIcon("/icons/pixiv.svg", true);
-
 }

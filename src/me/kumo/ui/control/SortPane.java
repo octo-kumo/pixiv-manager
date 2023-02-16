@@ -30,7 +30,7 @@ public class SortPane extends JPanel implements ActionListener {
         options.add(new SortOption("ID", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getId), this));
         options.add(new SortOption("View", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalView), this));
         options.add(new SortOption("Bookmark", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalBookmarks), this));
-        options.add(new SortOption("Bookmark Date", SortOption.SortDirection.DOWN, Comparator.comparing(Illustration::getCreateDate), this));
+        options.add(new SortOption("Bookmark Date", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getCreateDate), this));
         options.add(new SortOption("Sanity", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getSanityLevel), this));
 
         options.forEach(this::add);
@@ -44,18 +44,16 @@ public class SortPane extends JPanel implements ActionListener {
     }
 
     public Stream<Illustration> sort(Stream<Illustration> illustrations) {
-        for (SortOption option : options) {
-            if (option.enabled()) illustrations = illustrations.sorted(option);
-        }
+        for (SortOption option : options) if (option.enabled()) illustrations = illustrations.sorted(option);
         return illustrations;
+    }
+
+    public void reset() {
+        for (SortOption option : options) option.setDirection(SortOption.SortDirection.UNDEFINED);
     }
 
     public static class SortOption extends JButton implements Comparator<Illustration> {
         private final Comparator<Illustration> comparator;
-
-        public SortDirection getDirection() {
-            return direction;
-        }
 
         public void setDirection(SortDirection direction) {
             this.direction = direction;

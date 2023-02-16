@@ -6,7 +6,7 @@ plugins {
 group = 'me.kumo'
 version = '0.0.2'
 application {
-    mainClass = 'me.kumo.Main'
+    mainClass = 'me.kumo.PixivManager'
 }
 repositories {
     mavenLocal()

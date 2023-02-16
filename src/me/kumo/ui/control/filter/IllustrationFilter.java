@@ -5,6 +5,8 @@ import com.github.hanshsieh.pixivj.model.Illustration;
 import java.util.stream.Stream;
 
 public interface IllustrationFilter {
+    void reset();
+
     boolean test(Illustration illustration);
 
     default Stream<Illustration> filter(Stream<Illustration> illustrations) {
