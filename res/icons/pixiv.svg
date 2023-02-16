@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs id="colors">
+        <linearGradient id="menuIconEnabled" fallback="Label.foreground">
+            <stop offset="0" stop-color="#AFB1B3"/>
+            <stop offset="1" stop-color="#AFB1B3"/>
+        </linearGradient>
+    </defs>
+    <path fill="url(#menuIconEnabled)"
+          d="M 8.6726 1.4252 C 6.4024 1.4675 3.661 2.5106 0.626 5.1469 L 1.4343 6.8985 L 1.8743 6.6435 L 1.8743 5.7402 C 2.1354 5.216 2.5001 4.7338 3.216 4.3969 L 3.216 14.4985 L 2.8443 14.4985 L 2.8476 14.8585 L 5.3676 14.8585 L 5.3676 14.5085 L 4.9893 14.5085 L 4.9893 11.9619 C 19.0553 15.1137 17.1649 1.267 8.6726 1.4252 Z M 8.5676 2.3985 C 15.3685 2.4462 15.526 14.421 4.9893 10.8302 L 4.9893 3.3152 C 6.3279 2.6642 7.526 2.3912 8.5676 2.3985 Z"/>
+</svg>

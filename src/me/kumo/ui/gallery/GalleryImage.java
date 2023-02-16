@@ -33,7 +33,6 @@ public class GalleryImage extends JComponent implements ComponentListener {
 
     @Override
     public void paintComponent(Graphics g) {
-        super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHints(ImageUtils.RENDERING_HINTS);
         if (this.thumbnail != null && shown) g2d.drawImage(thumbnail, 0, 0, null);
@@ -46,7 +45,7 @@ public class GalleryImage extends JComponent implements ComponentListener {
         if (shown) {
             loadImage();
         } else {
-            if (worker != null) {
+            if (worker != null && !worker.isDone() && !worker.isCancelled()) {
                 worker.cancel(true);
                 worker = null;
             }

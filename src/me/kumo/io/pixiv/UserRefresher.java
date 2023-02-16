@@ -22,17 +22,17 @@ public class UserRefresher extends LazyTokenRefresher {
     private Consumer<User> loaded = user -> {
     };
 
-    public void setOnLoad(Consumer<User> loaded) {
-        this.loaded = loaded;
-        if (user != null) loaded.accept(user);
-    }
-
     public UserRefresher(@NonNull PixivOAuthClient client) {
         super(client);
     }
 
     public UserRefresher(@NonNull PixivOAuthClient client, @NonNull Duration expireTolerance) {
         super(client, expireTolerance);
+    }
+
+    public void setOnLoad(Consumer<User> loaded) {
+        this.loaded = loaded;
+        if (user != null) loaded.accept(user);
     }
 
     @Override

@@ -1,8 +1,8 @@
 package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
-import me.kumo.io.Loader;
-import me.kumo.ui.filter.FilterPane;
+import com.github.weisj.darklaf.components.OverlayScrollPane;
+import me.kumo.ui.Refreshable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,37 +11,38 @@ import java.awt.event.ComponentListener;
 import java.util.Arrays;
 import java.util.Stack;
 
-public class Gallery extends JPanel implements ComponentListener {
+public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<Illustration[]> {
     private final JPanel grid;
-    private final FilterPane filter;
-    private int colCount = 5;
-
-    private Stack<GalleryItem> usedPool = new Stack<>();
-    private Stack<GalleryItem> freePool = new Stack<>();
+    private final Stack<GalleryItem> usedPool = new Stack<>();
+    private final Stack<GalleryItem> freePool = new Stack<>();
+    private int colCount;
 
     public Gallery() {
-        super(new BorderLayout());
-        setPreferredSize(new Dimension(1280, 720));
-        add(filter = new FilterPane(this), BorderLayout.NORTH);
-        add(new JScrollPane(grid = new JPanel() {{
-            setLayout(new GridLayout(0, colCount, 10, 10));
-        }}) {{
-            getVerticalScrollBar().setUnitIncrement(16);
-            getViewport().addChangeListener(e -> {
-                Rectangle visibleRect = getViewport().getViewRect();
-                Arrays.stream(grid.getComponents())
-                        .forEach(component -> ((GalleryItem) component)
-                                .setShown(component.getBounds().intersects(visibleRect)));
-            });
-        }}, BorderLayout.CENTER);
-        addComponentListener(this);
-        refresh();
+        this(5);
     }
 
-    public void refresh() {
-        Illustration[] illustrations = filter.filter(Loader.illustrations);
+    public Gallery(int colCount) {
+        super(null, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        this.colCount = colCount;
+        this.grid = new JPanel();
+        getScrollPane().setViewportView(this.grid);
+        getVerticalScrollBar().setUnitIncrement(32);
+
+        setPreferredSize(new Dimension(1280, 720));
+        getScrollPane().getViewport().addChangeListener(e -> updateShownStatus());
+        addComponentListener(this);
+    }
+
+    private void updateShownStatus() {
+        Rectangle visibleRect = getScrollPane().getViewport().getViewRect();
+        Arrays.stream(grid.getComponents())
+                .forEach(component -> ((GalleryItem) component)
+                        .setShown(component.getBounds().intersects(visibleRect)));
+    }
+
+    public void refresh(Illustration[] illustrations) {
         grid.removeAll();
-        grid.setLayout(new GridLayout(0, Math.max(1, Math.min(colCount, illustrations.length)), 10, 10));
+        updateLayout(illustrations.length);
         freePool.addAll(usedPool);
         usedPool.clear();
         for (Illustration illustration : illustrations) {
@@ -52,14 +53,18 @@ public class Gallery extends JPanel implements ComponentListener {
             grid.add(holder);
         }
         revalidate();
+        updateShownStatus();
         repaint();
+    }
+
+    private void updateLayout(int count) {
+        grid.setLayout(new GridLayout(0, Math.max(1, Math.min(colCount, count)), 0, 0));
     }
 
     @Override
     public void componentResized(ComponentEvent e) {
-        if (colCount != (colCount = e.getComponent().getWidth() / GalleryImage.GRID_SIZE)) {
-            grid.setLayout(new GridLayout(0, Math.max(1, colCount), 10, 10));
-        }
+        if (colCount != (colCount = e.getComponent().getWidth() / GalleryImage.GRID_SIZE))
+            updateLayout(grid.getComponentCount());
     }
 
     @Override

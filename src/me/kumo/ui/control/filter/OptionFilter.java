@@ -1,33 +1,32 @@
-package me.kumo.ui.filter.options;
+package me.kumo.ui.control.filter;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
 import com.github.weisj.darklaf.components.tristate.TristateState;
-import me.kumo.ui.filter.FilterPane;
+import me.kumo.ui.control.ControlPane;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.stream.Stream;
 
-public class FilterOptions extends JPanel implements ActionListener {
+public class OptionFilter extends JPanel implements ActionListener, IllustrationFilter {
     private final TristateCheckBox r18;
     private final TristateCheckBox visible;
     private final TristateCheckBox restrict;
-    private final FilterPane filterPane;
+    private final ControlPane controlPane;
 
-    public FilterOptions(FilterPane filterPane) {
+    public OptionFilter(ControlPane controlPane) {
         super(new FlowLayout(FlowLayout.LEADING));
-        this.filterPane = filterPane;
+        this.controlPane = controlPane;
         add(r18 = new TristateCheckBox("R-18", null, TristateState.INDETERMINATE_SEL) {{
-            addActionListener(FilterOptions.this);
+            addActionListener(OptionFilter.this);
         }});
         add(visible = new TristateCheckBox("Visible", null, TristateState.INDETERMINATE_SEL) {{
-            addActionListener(FilterOptions.this);
+            addActionListener(OptionFilter.this);
         }});
         add(restrict = new TristateCheckBox("Restricted", null, TristateState.INDETERMINATE_SEL) {{
-            addActionListener(FilterOptions.this);
+            addActionListener(OptionFilter.this);
         }});
     }
 
@@ -53,20 +52,14 @@ public class FilterOptions extends JPanel implements ActionListener {
         if (!restrict.isIndeterminate())
             if (restrict == TristateState.SELECTED && illustration.getRestrict() == 0) {
                 return false;
-            } else if (restrict == TristateState.DESELECTED && illustration.getRestrict() != 0) {
-                return false;
-            }
+            } else return restrict != TristateState.DESELECTED || illustration.getRestrict() == 0;
 
 
         return true;
     }
 
-    public Stream<Illustration> filter(Stream<Illustration> illustrations) {
-        return illustrations.filter(this::test);
-    }
-
     @Override
     public void actionPerformed(ActionEvent e) {
-        SwingUtilities.invokeLater(filterPane::refresh);
+        SwingUtilities.invokeLater(controlPane::applyAll);
     }
 }

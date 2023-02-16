@@ -16,14 +16,6 @@ public class BookmarkFilter {
     @SerializedName("restrict")
     private Restrict restrict = Restrict.PUBLIC;
 
-    public enum Restrict {
-        @SerializedName("public")
-        PUBLIC,
-        @SerializedName("private")
-        PRIVATE
-    }
-
-
     @NonNull
     public static BookmarkFilter fromUrl(@NonNull String url) throws IllegalArgumentException {
         return new QueryParamConverter()
@@ -60,6 +52,13 @@ public class BookmarkFilter {
 
     public void setRestrict(Restrict restrict) {
         this.restrict = restrict;
+    }
+
+    public enum Restrict {
+        @SerializedName("public")
+        PUBLIC,
+        @SerializedName("private")
+        PRIVATE
     }
 
 }

@@ -3,7 +3,7 @@ package me.kumo;
 import com.github.weisj.darklaf.LafManager;
 import me.kumo.io.Loader;
 import me.kumo.io.pixiv.Pixiv;
-import me.kumo.ui.gallery.Gallery;
+import me.kumo.ui.ControlPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,14 +13,15 @@ public class Main extends JFrame {
 
     public Main() {
         super("Pixiv Manager");
-        pixiv = new Pixiv();
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setContentPane(new Gallery());
+        setContentPane(new ControlPanel(Loader.illustrations));
 
 
         pack();
         setLocationRelativeTo(null);
+
+        pixiv = new Pixiv();
     }
 
     public static void main(String[] args) {
