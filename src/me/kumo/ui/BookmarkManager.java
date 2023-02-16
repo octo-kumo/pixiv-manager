@@ -30,13 +30,14 @@ public class BookmarkManager extends ControlPanel {
     private final Pixiv pixiv;
     private final ArrayList<Illustration> bookmarks;
     private LoadingIndicator indicator;
+    private JLabel countLabel;
     private User user;
 
     public BookmarkManager(Pixiv pixiv) {
         this.pixiv = pixiv;
         add(new JPanel(new FlowLayout(FlowLayout.LEADING)) {{
-            indicator = new LoadingIndicator("Loading bookmarks");
-            add(indicator);
+            add(indicator = new LoadingIndicator("Loading bookmarks"));
+            add(countLabel = new JLabel(""));
         }}, BorderLayout.SOUTH);
         bookmarks = new ArrayList<>();
         setIllustrations(bookmarks);
@@ -111,5 +112,11 @@ public class BookmarkManager extends ControlPanel {
         }
         nextURL.set(searchedIllusts.getNextUrl());
         return illusts;
+    }
+
+    @Override
+    public void refresh(List<Illustration> illustrations) {
+        super.refresh(illustrations);
+        countLabel.setText(illustrations.size() + " shown");
     }
 }

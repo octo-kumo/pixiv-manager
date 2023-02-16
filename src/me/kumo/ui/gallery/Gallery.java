@@ -6,6 +6,8 @@ import me.kumo.ui.Refreshable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.Arrays;
@@ -15,7 +17,7 @@ import java.util.Stack;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>> {
+public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>>, ActionListener {
     private final JPanel grid;
     private final Stack<GalleryItem> usedPool = new Stack<>();
     private final HashMap<Long, GalleryItem> freePool = new HashMap<>();
@@ -32,9 +34,11 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         getScrollPane().setViewportView(this.grid);
         getVerticalScrollBar().setUnitIncrement(32);
 
+        Timer timer = new Timer(16, this);
         setPreferredSize(new Dimension(720, 480));
         getScrollPane().getViewport().addChangeListener(e -> updateShownStatus());
         addComponentListener(this);
+        timer.start();
     }
 
     private void updateShownStatus() {
@@ -86,5 +90,10 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
 
     public void tapGallery() {
         usedPool.forEach(GalleryItem::updateImage);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        usedPool.stream().filter(GalleryItem::isShown).filter(i -> !i.image.loaded()).forEach(Component::repaint);
     }
 }

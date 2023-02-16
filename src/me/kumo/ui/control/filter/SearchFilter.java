@@ -16,6 +16,7 @@ public class SearchFilter extends Box implements IllustrationFilter {
     private final SearchTextFieldWithHistory searchbar;
     private final JCheckBox searchInTags;
     private final JCheckBox ignoreCase;
+    private final JCheckBox searchInAuthor;
     private String filter;
 
     public SearchFilter(ControlPane controlPane) {
@@ -30,6 +31,9 @@ public class SearchFilter extends Box implements IllustrationFilter {
         });
         add(searchbar);
         add(searchInTags = new JCheckBox("Tags") {{
+            addActionListener(e -> controlPane.applyAll());
+        }});
+        add(searchInAuthor = new JCheckBox("Author") {{
             addActionListener(e -> controlPane.applyAll());
         }});
         add(ignoreCase = new JCheckBox("Ignore Case") {{
@@ -55,26 +59,27 @@ public class SearchFilter extends Box implements IllustrationFilter {
     @Override
     public boolean test(Illustration illustration) {
         if (filter == null || filter.isEmpty()) return true;
-        if (ignoreCase.isSelected()) filter = filter.toUpperCase();
         if (searchInTags.isSelected() && illustration.getTags().stream().anyMatch(this::testTag))
             return true;
+        if (searchInAuthor.isSelected() && (startsWith(illustration.getUser().getId().toString(), filter) ||
+                contains(illustration.getUser().getAccount(), filter) ||
+                contains(illustration.getUser().getName(), filter))) return true;
 
-        if (ignoreCase.isSelected())
-            return illustration.getId().toString().toUpperCase().startsWith(filter) ||
-                    illustration.getTitle().toUpperCase().contains(filter) ||
-                    illustration.getCaption().toUpperCase().contains(filter);
-        else
-            return illustration.getId().toString().startsWith(filter) ||
-                    illustration.getTitle().contains(filter) ||
-                    illustration.getCaption().contains(filter);
+        return startsWith(illustration.getId().toString(), filter) ||
+                contains(illustration.getTitle(), filter) ||
+                contains(illustration.getCaption(), filter);
     }
 
     private boolean testTag(Tag tag) {
-        if (ignoreCase.isSelected())
-            return tag.getTranslatedName() != null && tag.getTranslatedName().toUpperCase().contains(filter) ||
-                    tag.getName() != null && tag.getName().toUpperCase().contains(filter);
-        else
-            return tag.getTranslatedName() != null && tag.getTranslatedName().contains(filter) ||
-                    tag.getName() != null && tag.getName().contains(filter);
+        return tag.getTranslatedName() != null && contains(tag.getTranslatedName(), filter) ||
+                tag.getName() != null && contains(tag.getName(), filter);
+    }
+
+    private boolean startsWith(String a, String b) {
+        return ignoreCase.isSelected() ? a.toUpperCase().startsWith(b.toUpperCase()) : a.startsWith(b);
+    }
+
+    private boolean contains(String a, String b) {
+        return ignoreCase.isSelected() ? a.toUpperCase().contains(b.toUpperCase()) : a.contains(b);
     }
 }

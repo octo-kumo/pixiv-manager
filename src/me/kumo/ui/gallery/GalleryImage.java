@@ -7,12 +7,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.util.Objects;
 
 public class GalleryImage extends JComponent implements ComponentListener {
     public static final int GRID_SIZE = 200;
+    public static final BasicStroke ROUND_STROKE = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
     private SwingWorker<BufferedImage, String> worker;
     private BufferedImage thumbnail;
@@ -28,6 +30,10 @@ public class GalleryImage extends JComponent implements ComponentListener {
         return file != null;
     }
 
+    public boolean loaded() {
+        return thumbnail != null;
+    }
+
     public void setImage(String file) {
         if (!Objects.equals(this.file, this.file = file)) {
             this.thumbnail = null;
@@ -39,8 +45,12 @@ public class GalleryImage extends JComponent implements ComponentListener {
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHints(ImageUtils.RENDERING_HINTS);
-        if (this.thumbnail != null && shown) g2d.drawImage(thumbnail, 0, 0, null);
-        else g2d.drawString("Loading...", 0, 10);
+        if (this.thumbnail == null || !shown) {
+            double r = 40;
+            double clock = (System.currentTimeMillis() % 1000) / 1000d;
+            g2d.setStroke(ROUND_STROKE);
+            g2d.draw(new Arc2D.Double(getWidth() / 2d - r, getHeight() / 2d - r, r * 2, r * 2, clock * 360, clock * 720 - 360, Arc2D.OPEN));
+        } else g2d.drawImage(thumbnail, 0, 0, null);
     }
 
     public void setShown(boolean shown) {

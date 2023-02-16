@@ -5,16 +5,18 @@ import me.kumo.io.Icons;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.MatteBorder;
 import java.awt.*;
 
 public class IllustrationInfo extends JPanel {
     public static final Color TRANSPARENT = new Color(0, true);
+    public static final Color HALF_TRANSPARENT = new Color(0xaa000000, true);
+    private JLabel author;
     private JLabel id;
     private JLabel views;
     private JLabel bookmarks;
     private JLabel r18;
     private JLabel pageNumber;
+    private JLabel imageSize;
 
     public IllustrationInfo() {
         super(new BorderLayout());
@@ -22,7 +24,7 @@ public class IllustrationInfo extends JPanel {
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         add(new Box(BoxLayout.Y_AXIS) {
             protected void paintComponent(Graphics g) {
-                g.setColor(new Color(0xaa000000, true));
+                g.setColor(HALF_TRANSPARENT);
                 g.fillRect(0, 0, getWidth(), getHeight());
                 super.paintComponent(g);
             }
@@ -34,19 +36,38 @@ public class IllustrationInfo extends JPanel {
                 add(bookmarks = new JLabel(Icons.Heart));
             }
         }, BorderLayout.NORTH);
-        add(new Box(BoxLayout.X_AXIS) {{
-            add(r18 = new JLabel("R-18") {{
-                setForeground(Color.WHITE);
-                setBackground(Color.RED);
-                setFont(getFont().deriveFont(Font.BOLD));
-                setBorder(new MatteBorder(2, 4, 2, 4, Color.RED));
-                setOpaque(true);
+        add(new Box(BoxLayout.Y_AXIS) {{
+            add(new Box(BoxLayout.X_AXIS) {{
+                add(r18 = new JLabel("R-18") {{
+                    setForeground(Color.WHITE);
+                    setBackground(Color.RED);
+                    setFont(getFont().deriveFont(Font.BOLD));
+                    setBorder(new EmptyBorder(2, 4, 2, 4));
+                    setOpaque(true);
+                }});
+                add(Box.createHorizontalGlue());
+                add(pageNumber = new JLabel() {{
+                    setForeground(Color.WHITE);
+                    setBackground(Color.GRAY);
+                    setBorder(new EmptyBorder(2, 4, 2, 4));
+                    setOpaque(true);
+                }});
             }});
-            add(Box.createHorizontalGlue());
-            add(pageNumber = new JLabel() {{
-                setBackground(Color.GRAY);
-                setBorder(new MatteBorder(2, 4, 2, 4, Color.GRAY));
-                setOpaque(true);
+            add(new Box(BoxLayout.X_AXIS) {{
+                add(author = new JLabel() {{
+                    setForeground(Color.WHITE);
+                    setBackground(Color.GRAY);
+                    setFont(getFont().deriveFont(Font.BOLD));
+                    setBorder(new EmptyBorder(2, 4, 2, 4));
+                    setOpaque(true);
+                }});
+                add(Box.createHorizontalGlue());
+                add(imageSize = new JLabel() {{
+                    setForeground(Color.WHITE);
+                    setBackground(Color.GRAY);
+                    setBorder(new EmptyBorder(2, 4, 2, 4));
+                    setOpaque(true);
+                }});
             }});
         }}, BorderLayout.SOUTH);
     }
@@ -56,8 +77,10 @@ public class IllustrationInfo extends JPanel {
         bookmarks.setText(String.valueOf(illustration.getTotalBookmarks()));
         views.setText(String.valueOf(illustration.getTotalView()));
 
+        author.setText(illustration.getUser().getName());
+        imageSize.setText(illustration.getWidth() + "\u00D7" + illustration.getHeight());
         r18.setVisible(illustration.getXRestrict() != 0);
         pageNumber.setVisible(illustration.getPageCount() != 1);
-        pageNumber.setText(String.valueOf(illustration.getPageCount()));
+        pageNumber.setText("\u00D7" + illustration.getPageCount());
     }
 }

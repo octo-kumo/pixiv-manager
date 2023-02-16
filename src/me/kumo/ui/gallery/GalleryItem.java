@@ -138,28 +138,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                 setVisible(false);
             }});
             add(refresh = new IconButton(AllIcons.Action.Refresh.get(), e -> {
-                worker = new SwingWorker<>() {
-                    @Override
-                    protected Boolean doInBackground() {
-                        refreshProgress.setVisible(true);
-                        refreshProgress.setRunning(true);
-                        refresh.setVisible(false);
-                        return LocalGallery.downloadIllustration(Pixiv.getInstance(), illustration);
-                    }
-
-                    @Override
-                    protected void done() {
-                        try {
-                            refreshProgress.setVisible(false);
-                            if (get()) {
-                                updateImage();
-                                refresh(illustration);
-                            } else refresh.setVisible(true);
-                        } catch (InterruptedException | ExecutionException ignored) {
-                        }
-                    }
-                };
-                worker.execute();
+                LocalGallery.update();
+                updateImage();
+                refresh(illustration);
+                if (image.found()) return;
+                download();
             }));
 
             add(new IconButton(Icons.Pixiv, e -> open(illustration)));
@@ -167,9 +150,35 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
             add(file = new IconButton(AllIcons.Files.Image.get(), e -> openFile(illustration)));
         }
 
+        private void download() {
+            worker = new SwingWorker<>() {
+                @Override
+                protected Boolean doInBackground() {
+                    refreshProgress.setVisible(true);
+                    refreshProgress.setRunning(true);
+                    refresh.setVisible(false);
+                    return LocalGallery.downloadIllustration(Pixiv.getInstance(), illustration);
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        refreshProgress.setVisible(false);
+                        if (get()) {
+                            updateImage();
+                            refresh(illustration);
+                        } else refresh.setVisible(true);
+                    } catch (InterruptedException | ExecutionException ignored) {
+                    }
+                }
+            };
+            worker.execute();
+        }
+
         @Override
         public void refresh(Illustration illustration) {
             refreshProgress.setVisible(false);
+            if (!image.found()) download();
             refresh.setVisible(!image.found());
             copy.setVisible(image.found());
             file.setVisible(image.found());
