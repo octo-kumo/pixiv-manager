@@ -54,12 +54,6 @@ public class SortPane extends JPanel implements ActionListener {
 
     public static class SortOption extends JButton implements Comparator<Illustration> {
         private final Comparator<Illustration> comparator;
-
-        public void setDirection(SortDirection direction) {
-            this.direction = direction;
-            setIcon(getIcon(this.direction));
-        }
-
         private SortDirection direction;
 
         public SortOption(String name, SortDirection direction, Comparator<Illustration> comparator, ActionListener actionListener) {
@@ -88,6 +82,11 @@ public class SortPane extends JPanel implements ActionListener {
             }
         }
 
+        public void setDirection(SortDirection direction) {
+            this.direction = direction;
+            setIcon(getIcon(this.direction));
+        }
+
         @Override
         public int compare(Illustration o1, Illustration o2) {
             return (direction == SortDirection.UP ? 1 : direction == SortDirection.DOWN ? -1 : 0) * comparator.compare(o1, o2);
@@ -101,14 +100,14 @@ public class SortPane extends JPanel implements ActionListener {
             UNDEFINED() {
                 @Override
                 public SortDirection next() {
-                    return UP;
-                }
-            }, UP() {
-                @Override
-                public SortDirection next() {
                     return DOWN;
                 }
             }, DOWN() {
+                @Override
+                public SortDirection next() {
+                    return UP;
+                }
+            }, UP() {
                 @Override
                 public SortDirection next() {
                     return UNDEFINED;

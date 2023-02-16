@@ -7,7 +7,7 @@ import java.util.List;
 
 public class FileTransferable implements Transferable {
 
-    private List<File> listOfFiles;
+    private final List<File> listOfFiles;
 
     public FileTransferable(List<File> listOfFiles) {
         this.listOfFiles = listOfFiles;

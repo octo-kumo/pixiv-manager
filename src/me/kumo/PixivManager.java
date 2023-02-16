@@ -19,7 +19,7 @@ public class PixivManager extends JFrame implements WindowFocusListener {
 
         Pixiv pixiv = new Pixiv();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setContentPane(manager=new BookmarkManager(pixiv));
+        setContentPane(manager = new BookmarkManager(pixiv));
         addWindowFocusListener(this);
         pack();
         setLocationRelativeTo(null);

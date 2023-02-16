@@ -8,8 +8,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class IllustrationInfo extends JPanel {
-    public static final Color TRANSPARENT = new Color(0, true);
     public static final Color HALF_TRANSPARENT = new Color(0xaa000000, true);
+    private JLabel sanity;
     private JLabel author;
     private JLabel id;
     private JLabel views;
@@ -23,17 +23,17 @@ public class IllustrationInfo extends JPanel {
         setOpaque(false);
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         add(new Box(BoxLayout.Y_AXIS) {
-            protected void paintComponent(Graphics g) {
-                g.setColor(HALF_TRANSPARENT);
-                g.fillRect(0, 0, getWidth(), getHeight());
-                super.paintComponent(g);
-            }
-
             {
                 setBorder(new EmptyBorder(5, 5, 5, 5));
                 add(id = new JLabel(Icons.Empty));
                 add(views = new JLabel(Icons.Eye));
                 add(bookmarks = new JLabel(Icons.Heart));
+            }
+
+            protected void paintComponent(Graphics g) {
+                g.setColor(HALF_TRANSPARENT);
+                g.fillRect(0, 0, getWidth(), getHeight());
+                super.paintComponent(g);
             }
         }, BorderLayout.NORTH);
         add(new Box(BoxLayout.Y_AXIS) {{
@@ -44,6 +44,9 @@ public class IllustrationInfo extends JPanel {
                     setFont(getFont().deriveFont(Font.BOLD));
                     setBorder(new EmptyBorder(2, 4, 2, 4));
                     setOpaque(true);
+                }});
+                add(sanity = new JLabel() {{
+                    setBorder(new EmptyBorder(2, 4, 2, 4));
                 }});
                 add(Box.createHorizontalGlue());
                 add(pageNumber = new JLabel() {{
@@ -80,6 +83,7 @@ public class IllustrationInfo extends JPanel {
         author.setText(illustration.getUser().getName());
         imageSize.setText(illustration.getWidth() + "\u00D7" + illustration.getHeight());
         r18.setVisible(illustration.getXRestrict() != 0);
+        sanity.setText(String.valueOf(illustration.getSanityLevel()));
         pageNumber.setVisible(illustration.getPageCount() != 1);
         pageNumber.setText("\u00D7" + illustration.getPageCount());
     }
