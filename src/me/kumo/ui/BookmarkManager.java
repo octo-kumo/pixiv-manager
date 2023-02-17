@@ -12,7 +12,6 @@ import me.kumo.io.pixiv.Pixiv;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -40,7 +39,10 @@ public class BookmarkManager extends ControlPanel {
             add(countLabel = new JLabel(""));
         }}, BorderLayout.SOUTH);
         bookmarks = new ArrayList<>();
-        setIllustrations(bookmarks);
+        try {
+            bookmarks.addAll(List.of(JsonUtils.GSON.fromJson(new FileReader(PATH, StandardCharsets.UTF_8), Illustration[].class)));
+        } catch (IOException ignored) {
+        }
         pixiv.onLoad(user -> {
             this.user = user;
             System.out.println("Logged in as " + user.getName());
@@ -60,15 +62,12 @@ public class BookmarkManager extends ControlPanel {
                     indicator.setEnabled(false);
                 }
             }.execute();
+        },e->{
+            setIllustrations(bookmarks);
         });
     }
 
     public ArrayList<Illustration> loadAllBookmarks(Consumer<ArrayList<Illustration>> updater) throws PixivException, IOException {
-        bookmarks.clear();
-        try {
-            bookmarks.addAll(List.of(JsonUtils.GSON.fromJson(new FileReader(PATH, StandardCharsets.UTF_8), Illustration[].class)));
-        } catch (FileNotFoundException ignored) {
-        }
         AtomicReference<String> nextUrl = new AtomicReference<>(null);
         long stopAt = bookmarks.size() > 0 ? bookmarks.get(0).getId() : -1;
         int counter = 0;

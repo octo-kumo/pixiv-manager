@@ -20,46 +20,49 @@ public class UserRefresher extends LazyTokenRefresher {
 
     private Consumer<User> loaded = user -> {
     };
+    private Consumer<Exception> onError = e -> {
+    };
+    private Exception error;
 
     public UserRefresher(@NonNull PixivOAuthClient client, String token) {
         super(client);
         updateTokens("", token, Instant.now());
     }
 
-    public void setOnLoad(Consumer<User> loaded) {
+    public void setOnLoad(Consumer<User> loaded, Consumer<Exception> onError) {
         this.loaded = loaded;
+        this.onError = onError;
         if (user != null) loaded.accept(user);
+        if (error != null) onError.accept(error);
     }
 
     @Override
     @NonNull
-    public String getAccessToken() throws AuthException, IOException, IllegalStateException {
-        Validate.notNull(expiryTime, "Expiry time not set. Are you logged in?");
-        if (isNearExpire()) {
-            Validate.notNull(client, "Client is not set");
-            logger.debug("Access token is expired, refreshing it");
-            Credential credential = new Credential();
-            credential.setRefreshToken(this.refreshToken);
-            credential.setGrantType(GrantType.REFRESH_TOKEN);
-            AuthResult authResult = client.authenticate(credential);
-            if (user == null) {
-                user = authResult.getUser();
-                loaded.accept(user);
+    public String getAccessToken() throws AuthException, IOException {
+        try {
+            Validate.notNull(expiryTime, "Expiry time not set. Are you logged in?");
+            if (isNearExpire()) {
+                Validate.notNull(client, "Client is not set");
+                logger.debug("Access token is expired, refreshing it");
+                Credential credential = new Credential();
+                credential.setRefreshToken(this.refreshToken);
+                credential.setGrantType(GrantType.REFRESH_TOKEN);
+                AuthResult authResult = client.authenticate(credential);
+                if (user == null) {
+                    user = authResult.getUser();
+                    loaded.accept(user);
+                }
+                updateTokens(
+                        authResult.getAccessToken(),
+                        authResult.getRefreshToken(),
+                        Instant.now().plusSeconds(authResult.getExpiresIn()));
             }
-            updateTokens(
-                    authResult.getAccessToken(),
-                    authResult.getRefreshToken(),
-                    Instant.now().plusSeconds(authResult.getExpiresIn()));
+            Validate.notNull(accessToken, "Access token not set");
+            return this.accessToken;
+        } catch (Exception e) {
+            onError.accept(e);
+            error = e;
+            throw e;
         }
-        Validate.notNull(accessToken, "Access token not set");
-        return this.accessToken;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 }

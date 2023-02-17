@@ -8,6 +8,7 @@ import com.github.hanshsieh.pixivj.model.User;
 import com.github.hanshsieh.pixivj.oauth.PixivOAuthClient;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.swing.*;
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class Pixiv extends PixivApiClient {
         SwingUtilities.invokeLater(() -> {
             try {
                 System.out.println("Access Token :: " + tokenProvider.getAccessToken());
-            } catch (SSLHandshakeException ignored) {
+            } catch (SSLException ignored) {
             } catch (AuthException | IOException e) {
                 throw new RuntimeException(e);
             }
@@ -39,7 +40,7 @@ public class Pixiv extends PixivApiClient {
         return sendGetRequest("v1/user/bookmarks/illust", filter, SearchedIllusts.class);
     }
 
-    public void onLoad(Consumer<User> consumer) {
-        ((UserRefresher) tokenProvider).setOnLoad(consumer);
+    public void onLoad(Consumer<User> consumer,Consumer<Exception> onError) {
+        ((UserRefresher) tokenProvider).setOnLoad(consumer,onError);
     }
 }

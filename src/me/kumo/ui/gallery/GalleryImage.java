@@ -6,7 +6,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Arc2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,9 +30,8 @@ public class GalleryImage extends JComponent {
     private BufferedImage scaledCopy;
     private File file;
     private File cacheFile;
-    private boolean shown;
+    private boolean shown = false;
     private SwingWorker<Boolean, File> cacheWorker;
-    private TexturePaint paint;
     private double ratio;
     private Dimension size;
 
@@ -52,7 +50,11 @@ public class GalleryImage extends JComponent {
     public void setFile(File file) {
         if (!Objects.equals(this.file, this.file = file)) {
             this.scaledCopy = null;
-            this.cacheFile = new File(CACHE, file.getName());
+            try {
+                this.cacheFile = File.createTempFile(file.getName(), null, CACHE);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             loadImage();
         }
     }
@@ -60,15 +62,17 @@ public class GalleryImage extends JComponent {
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHints(ImageUtils.RENDERING_HINTS);
+//        g2d.setRenderingHints(ImageUtils.RENDERING_HINTS);
         if (this.scaledCopy == null || !shown) {
             double r = 40;
             double clock = (System.currentTimeMillis() % 1000) / 1000d;
             g2d.setStroke(ROUND_STROKE);
             g2d.draw(new Arc2D.Double(getWidth() / 2d - r, getHeight() / 2d - r, r * 2, r * 2, clock * 360, clock * 720 - 360, Arc2D.OPEN));
         } else {
-            g2d.setPaint(paint);
-            g2d.fillRect(0, 0, getWidth(), getHeight());
+            ratio = Math.max(1. * getWidth() / scaledCopy.getWidth(), 1. * getHeight() / scaledCopy.getHeight());
+            int w = (int) (scaledCopy.getWidth() * ratio);
+            int h = (int) (scaledCopy.getHeight() * ratio);
+            g2d.drawImage(scaledCopy, -(w - getWidth()) / 2, -(h - getHeight()) / 2, w, h, null);
             revalidateThumbnail();
         }
     }
@@ -83,6 +87,7 @@ public class GalleryImage extends JComponent {
                 worker.cancel(true);
                 worker = null;
             }
+            unload();
         }
     }
 
@@ -107,7 +112,6 @@ public class GalleryImage extends JComponent {
             protected void done() {
                 try {
                     scaledCopy = get();
-                    updatePaint();
                 } catch (CancellationException ignored) {
                 } catch (Exception ignored) {
                     System.out.println(ignored);
@@ -140,18 +144,9 @@ public class GalleryImage extends JComponent {
         cacheWorker.execute();
     }
 
-    private void updatePaint() {
-        ratio = Math.max(1. * getWidth() / scaledCopy.getWidth(), 1. * getHeight() / scaledCopy.getHeight());
-
-        double w = scaledCopy.getWidth() * ratio;
-        double h = scaledCopy.getHeight() * ratio;
-        paint = new TexturePaint(scaledCopy, new Rectangle2D.Double(getWidth() / 2d - w / 2, getHeight() / 2d - h / 2, w, h));
-    }
-
     public void revalidateThumbnail() {
         if (!loaded()) return;
         if (Objects.equals(size, size = getSize())) return;
-        updatePaint();
         if (getHeight() > GRID_SIZE && (ratio > 1.5 || (1 / ratio) > 1.5)) {
             System.out.println("Recalculating cache");
             scaledCopy = null;
