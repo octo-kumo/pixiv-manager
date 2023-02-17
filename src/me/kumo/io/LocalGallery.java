@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 
 public class LocalGallery {
     private static final String PATH = "/Users/zy/Documents/Pictures2022";
-    private static final HashMap<String, String> ID_FILE_MAP = new HashMap<>();
+    private static final HashMap<String, File> ID_FILE_MAP = new HashMap<>();
     private static final HashSet<Long> downloading = new HashSet<>();
     private static File[] FILES;
 
@@ -25,14 +25,14 @@ public class LocalGallery {
         FILES = new File(PATH).listFiles((dir, name) -> name.endsWith(".jpg") || name.endsWith(".png"));
     }
 
-    public static String getImage(long illusID) {
+    public static File getImage(long illusID) {
         return getImage(String.valueOf(illusID));
     }
 
-    synchronized public static String getImage(String illusID) {
+    synchronized public static File getImage(String illusID) {
         return ID_FILE_MAP.computeIfAbsent(illusID, i -> {
             Optional<File> file = Arrays.stream(FILES).filter(f -> f.getName().startsWith(illusID)).findAny();
-            return file.map(File::getAbsolutePath).orElse(null);
+            return file.orElse(null);
         });
     }
 

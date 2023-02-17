@@ -14,7 +14,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -51,14 +50,14 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     public static void openFile(Illustration illustration) {
         if (illustration == null) return;
         try {
-            Desktop.getDesktop().open(new File(LocalGallery.getImage(illustration.getId())));
+            Desktop.getDesktop().open(LocalGallery.getImage(illustration.getId()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void copyFile(Illustration illustration) {
-        FileTransferable ft = new FileTransferable(List.of(new File(LocalGallery.getImage(illustration.getId()))));
+        FileTransferable ft = new FileTransferable(List.of(LocalGallery.getImage(illustration.getId())));
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) ->
                 System.out.println("Lost ownership"));
     }
@@ -81,6 +80,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         controls.refresh(illustration);
     }
 
+    @Override
+    public void revalidate() {
+        super.revalidate();
+    }
+
     public boolean isShown() {
         return shown;
     }
@@ -88,6 +92,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     public void setShown(boolean shown) {
         this.shown = shown;
         this.image.setShown(shown);
+    }
+
+    public void setVisible(boolean aFlag) {
+        super.setVisible(aFlag);
+        if (!aFlag) image.unload();
     }
 
     @Override
@@ -117,7 +126,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     }
 
     public void updateImage() {
-        this.image.setImage(LocalGallery.getImage(String.valueOf(illustration.getId())));
+        this.image.setFile(LocalGallery.getImage(String.valueOf(illustration.getId())));
     }
 
     private class ItemToolbar extends JPanel implements Refreshable<Illustration> {

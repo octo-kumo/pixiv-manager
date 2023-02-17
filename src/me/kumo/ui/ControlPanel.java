@@ -14,7 +14,6 @@ public class ControlPanel extends JPanel implements Refreshable<List<Illustratio
     protected final ControlPane filter;
     protected final Gallery gallery;
 
-
     protected ArrayList<Illustration> illustrations;
 
     public ControlPanel() {

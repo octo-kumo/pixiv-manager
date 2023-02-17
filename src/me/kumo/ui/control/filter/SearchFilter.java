@@ -11,33 +11,35 @@ import me.kumo.ui.utils.IconButton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Objects;
 
-public class SearchFilter extends Box implements IllustrationFilter {
+public class SearchFilter extends Box implements IllustrationFilter, ActionListener {
     private final SearchTextFieldWithHistory searchbar;
     private final JCheckBox searchInTags;
     private final JCheckBox ignoreCase;
     private final JCheckBox searchInAuthor;
-    private String filter;
+    private final ControlPane controlPane;
+    private String filter = "";
 
     public SearchFilter(ControlPane controlPane) {
         super(BoxLayout.X_AXIS);
+        this.controlPane = controlPane;
         setBorder(new EmptyBorder(5, 5, 0, 5));
         searchbar = new SearchTextFieldWithHistory();
         searchbar.setPreferredSize(new Dimension(200, searchbar.getPreferredSize().height));
         searchbar.setMaximumSize(new Dimension(200, searchbar.getPreferredSize().height));
-        searchbar.addActionListener(e -> {
-            searchbar.addEntry(filter = searchbar.getText());
-            controlPane.applyAll();
-        });
+        searchbar.addActionListener(this);
         add(searchbar);
         add(searchInTags = new JCheckBox("Tags") {{
-            addActionListener(e -> controlPane.applyAll());
+            addActionListener(SearchFilter.this);
         }});
         add(searchInAuthor = new JCheckBox("Author") {{
-            addActionListener(e -> controlPane.applyAll());
+            addActionListener(SearchFilter.this);
         }});
         add(ignoreCase = new JCheckBox("Ignore Case") {{
-            addActionListener(e -> controlPane.applyAll());
+            addActionListener(SearchFilter.this);
         }});
         add(Box.createHorizontalGlue());
         add(new IconButton(Icons.Down, e -> {
@@ -54,11 +56,12 @@ public class SearchFilter extends Box implements IllustrationFilter {
     public void reset() {
         searchbar.setText(filter = "");
         searchInTags.setSelected(false);
+        searchInAuthor.setSelected(false);
     }
 
     @Override
     public boolean test(Illustration illustration) {
-        if (filter == null || filter.isEmpty()) return true;
+        if (filter == null || filter.isEmpty() || filter.isBlank()) return true;
         if (searchInTags.isSelected() && illustration.getTags().stream().anyMatch(this::testTag))
             return true;
         if (searchInAuthor.isSelected() && (startsWith(illustration.getUser().getId().toString(), filter) ||
@@ -81,5 +84,13 @@ public class SearchFilter extends Box implements IllustrationFilter {
 
     private boolean contains(String a, String b) {
         return ignoreCase.isSelected() ? a.toUpperCase().contains(b.toUpperCase()) : a.contains(b);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == searchbar) {
+            if (Objects.equals(filter, filter = searchbar.getText())) return;
+        } else if (filter == null || filter.isBlank()) return;
+        controlPane.applyAll();
     }
 }

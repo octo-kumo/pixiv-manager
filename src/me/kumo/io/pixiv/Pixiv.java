@@ -8,6 +8,7 @@ import com.github.hanshsieh.pixivj.model.User;
 import com.github.hanshsieh.pixivj.oauth.PixivOAuthClient;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import javax.net.ssl.SSLHandshakeException;
 import javax.swing.*;
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -22,6 +23,7 @@ public class Pixiv extends PixivApiClient {
         SwingUtilities.invokeLater(() -> {
             try {
                 System.out.println("Access Token :: " + tokenProvider.getAccessToken());
+            } catch (SSLHandshakeException ignored) {
             } catch (AuthException | IOException e) {
                 throw new RuntimeException(e);
             }

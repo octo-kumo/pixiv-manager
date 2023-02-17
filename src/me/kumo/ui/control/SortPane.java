@@ -44,7 +44,9 @@ public class SortPane extends JPanel implements ActionListener {
     }
 
     public Stream<Illustration> sort(Stream<Illustration> illustrations) {
-        for (SortOption option : options) if (option.enabled()) illustrations = illustrations.sorted(option);
+        for (SortOption option : options)
+            if (option.enabled())
+                illustrations = illustrations.sorted(option);
         return illustrations;
     }
 

@@ -21,11 +21,20 @@ sourceSets {
             srcDirs = ['res']
         }
     }
+    test {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+        java {
+            srcDirs = ['test']
+        }
+    }
 }
 dependencies {
     implementation('org.swinglabs.swingx:swingx-all:1.6.4')
+    implementation('org.imgscalr:imgscalr-lib:4.2')
     implementation('com.github.hanshsieh:pixivj:1.2.3')
     implementation('org.jetbrains:annotations:23.0.0')
     implementation('com.github.weisj:darklaf-core:3.0.2')
     implementation('com.google.code.gson:gson:2.8.9')
+    testImplementation('org.junit.jupiter:junit-jupiter:5.7.1')
 }

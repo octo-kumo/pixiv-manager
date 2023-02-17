@@ -2,13 +2,18 @@ package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.Icons;
+import me.kumo.io.LocalGallery;
+import me.kumo.ui.utils.Formatters;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public class IllustrationInfo extends JPanel {
     public static final Color HALF_TRANSPARENT = new Color(0xaa000000, true);
+    private JLabel fileSize;
     private JLabel sanity;
     private JLabel author;
     private JLabel id;
@@ -55,6 +60,12 @@ public class IllustrationInfo extends JPanel {
                     setBorder(new EmptyBorder(2, 4, 2, 4));
                     setOpaque(true);
                 }});
+                add(fileSize = new JLabel() {{
+                    setForeground(Color.WHITE);
+                    setBackground(Color.GRAY);
+                    setBorder(new EmptyBorder(2, 4, 2, 4));
+                    setOpaque(true);
+                }});
             }});
             add(new Box(BoxLayout.X_AXIS) {{
                 add(author = new JLabel() {{
@@ -86,5 +97,12 @@ public class IllustrationInfo extends JPanel {
         sanity.setText(String.valueOf(illustration.getSanityLevel()));
         pageNumber.setVisible(illustration.getPageCount() != 1);
         pageNumber.setText("\u00D7" + illustration.getPageCount());
+
+        try {
+            long size = Files.size(LocalGallery.getImage(illustration.getId()).toPath());
+            fileSize.setText(Formatters.formatBytes(size));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
