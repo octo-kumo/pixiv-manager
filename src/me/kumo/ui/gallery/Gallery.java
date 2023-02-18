@@ -2,8 +2,11 @@ package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
+import me.kumo.io.LocalGallery;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.utils.Formatters;
+import me.tongfei.progressbar.ProgressBar;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Timer;
 import javax.swing.*;
@@ -12,14 +15,16 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>> {
-    private final JPanel grid;
+public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>>, Iterable<GalleryItem> {
+    public final JPanel grid;
+    protected final ConcurrentHashMap<Long, GalleryItem> holderMap = new ConcurrentHashMap<>();
     private final Stack<GalleryItem> usedPool = new Stack<>();
-    private final HashMap<Long, GalleryItem> holderMap = new HashMap<>();
+    protected int layoutItemCount;
     private int colCount;
     private SwingWorker<Object, Object> worker;
-    private int layoutItemCount;
+
     private long last_frame_nanos = 0;
 
     public Gallery() {
@@ -30,7 +35,7 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         super(null, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         this.colCount = colCount;
         this.grid = new JPanel();
-        new Timer(16, e -> repaint()).start();
+        new Timer(8, e -> repaint()).start();
         getScrollPane().setViewportView(this.grid);
         getVerticalScrollBar().setUnitIncrement(32);
         setPreferredSize(new Dimension(720, 480));
@@ -43,41 +48,59 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         Arrays.stream(grid.getComponents()).filter(Objects::nonNull).forEach(component -> ((GalleryItem) component).setShown(component.getBounds().intersects(visibleRect)));
     }
 
+    public void refresh(Illustration illustration) {
+        usedPool.stream().filter(p -> Objects.equals(p.getIllustration().getId(), illustration.getId()))
+                .forEach(i -> i.refresh(illustration));
+    }
 
     public void refresh(List<Illustration> illustrations) {
         if (worker != null) worker.cancel(true);
-        System.out.println("gallery refresh n(" + illustrations.size() + ")");
+        System.out.println("gallery.refresh(" + illustrations.size() + ")");
         worker = new SwingWorker<>() {
             @Override
             protected Object doInBackground() {
+                int hScroll = getHorizontalScrollBar().getValue();
+                int vScroll = getVerticalScrollBar().getValue();
+                System.out.println("gallery.doInBackground(" + illustrations.size() + ")");
                 grid.removeAll();
-                updateLayout(illustrations.size());
-                grid.revalidate();
-                for (GalleryItem galleryItem : usedPool) galleryItem.setVisible(false);
                 usedPool.clear();
-                for (Illustration illustration : illustrations) {
-                    GalleryItem holder = holderMap.computeIfAbsent(illustration.getId(), i -> new GalleryItem());
-                    holder.refresh(illustration);
-                    holder.setVisible(true);
-                    usedPool.push(holder);
-                    RepaintManager.currentManager(grid).markCompletelyClean(holder);
-                    grid.add(holder);
-                    if (isCancelled()) return null;
-                    try {
-                        Thread.sleep(0);
-                    } catch (InterruptedException ignored) {
-                        return null;
+                updateLayout(illustrations.size());
+                try (ProgressBar bar = new ProgressBar("Refresh Illustraions", illustrations.size())) {
+                    for (Illustration illustration : illustrations) {
+                        GalleryItem holder = getRefreshOrCreate(illustration);
+                        RepaintManager.currentManager(grid).markCompletelyClean(holder);
+                        usedPool.push(holder);
+                        grid.add(holder);
+                        bar.step();
+                        try {
+                            if (isCancelled()) return null;
+                            Thread.sleep(0);
+                        } catch (InterruptedException ignored) {
+                            ignored.printStackTrace();
+                            return null;
+                        }
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+                System.out.println("gallery.doInBackground.validate(" + grid.getComponentCount() + ")");
                 grid.revalidate();
                 SwingUtilities.invokeLater(() -> {
                     updateShownStatus();
                     repaint();
+                    getHorizontalScrollBar().setValue(hScroll);
+                    getVerticalScrollBar().setValue(vScroll);
                 });
                 return null;
             }
         };
         SwingUtilities.invokeLater(() -> worker.execute());
+    }
+
+    public GalleryItem getRefreshOrCreate(Illustration illustration) {
+        GalleryItem holder = holderMap.computeIfAbsent(illustration.getId(), i -> new GalleryItem());
+        holder.refresh(illustration);
+        return holder;
     }
 
 
@@ -103,27 +126,31 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         x += 4;
         y += 4;
         int barPad = g.getFontMetrics().stringWidth("MEM:  ");
+        int barWidth = 200 - barPad;
         g.setXORMode(Color.BLACK);
         g.drawString(String.format("OS:   %s (%s)", System.getProperty("os.name"), System.getProperty("os.version")), x, y += LINE_HEIGHT);
         g.drawString(String.format("ARCH: %s (%d cores)", System.getProperty("os.arch"), runtime.availableProcessors()), x, y += LINE_HEIGHT);
 
         long usedMem = runtime.totalMemory() - runtime.freeMemory();
-
-        g.fillRect(x + barPad, y + LINE_HEIGHT / 4, (int) ((200 - barPad) * runtime.totalMemory() / runtime.maxMemory()), LINE_HEIGHT);
+        g.fillRect(x + barPad, y + LINE_HEIGHT / 4, (int) (barWidth * runtime.totalMemory() / runtime.maxMemory()), LINE_HEIGHT);
         g.setColor(Color.RED);
-        g.fillRect(x + barPad, y + LINE_HEIGHT / 4, (int) ((200 - barPad) * usedMem / runtime.maxMemory()), LINE_HEIGHT);
+        g.fillRect(x + barPad, y + LINE_HEIGHT / 4, (int) (barWidth * usedMem / runtime.maxMemory()), LINE_HEIGHT);
         g.setColor(Color.WHITE);
         g.drawString("MEM:  %8s/%s/%s".formatted(Formatters.formatBytes(usedMem), Formatters.formatBytes(runtime.totalMemory()), Formatters.formatBytes(runtime.maxMemory())), x, y += LINE_HEIGHT);
         g.drawString("FPS:  %5.1f".formatted(1e9d / -(this.last_frame_nanos - (this.last_frame_nanos = System.nanoTime()))), x, y += LINE_HEIGHT);
+
+        if (layoutItemCount != 0)
+            g.fillRect(x + barPad, y + LINE_HEIGHT / 4, barWidth * grid.getComponentCount() / layoutItemCount, LINE_HEIGHT);
         g.drawString("Cnt:  %d".formatted(grid.getComponentCount()), x, y += LINE_HEIGHT);
         String s = getClass().getPackage().getImplementationVersion();
         g.drawString(String.format("Ver:  %s", s == null ? "dev" : s), x, y += LINE_HEIGHT);
     }
 
-    private void updateLayout(int count) {
+    public void updateLayout(int count) {
         layoutItemCount = count;
         grid.setLayout(new GridLayout(0, Math.max(1, Math.min(colCount, count)), 0, 0));
         grid.revalidate();
+        grid.repaint();
     }
 
     @Override
@@ -145,6 +172,13 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
     }
 
     public void tapGallery() {
+        LocalGallery.update();
         usedPool.forEach(GalleryItem::updateImage);
+    }
+
+    @NotNull
+    @Override
+    public Iterator<GalleryItem> iterator() {
+        return usedPool.stream().iterator();
     }
 }

@@ -4,36 +4,25 @@ import com.github.hanshsieh.pixivj.exception.AuthException;
 import com.github.hanshsieh.pixivj.model.AuthResult;
 import com.github.hanshsieh.pixivj.model.Credential;
 import com.github.hanshsieh.pixivj.model.GrantType;
-import com.github.hanshsieh.pixivj.model.User;
 import com.github.hanshsieh.pixivj.oauth.PixivOAuthClient;
 import com.github.hanshsieh.pixivj.token.LazyTokenRefresher;
 import org.apache.commons.lang3.Validate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.function.Consumer;
 
 public class UserRefresher extends LazyTokenRefresher {
-
-    private User user;
-
-    private Consumer<User> loaded = user -> {
-    };
-    private Consumer<Exception> onError = e -> {
-    };
-    private Exception error;
+    private final EventListenerList list;
+    private boolean loaded;
+    private AuthResult result;
 
     public UserRefresher(@NonNull PixivOAuthClient client, String token) {
         super(client);
+        loaded = false;
+        list = new EventListenerList();
         updateTokens("", token, Instant.now());
-    }
-
-    public void setOnLoad(Consumer<User> loaded, Consumer<Exception> onError) {
-        this.loaded = loaded;
-        this.onError = onError;
-        if (user != null) loaded.accept(user);
-        if (error != null) onError.accept(error);
     }
 
     @Override
@@ -48,10 +37,9 @@ public class UserRefresher extends LazyTokenRefresher {
                 credential.setRefreshToken(this.refreshToken);
                 credential.setGrantType(GrantType.REFRESH_TOKEN);
                 AuthResult authResult = client.authenticate(credential);
-                if (user == null) {
-                    user = authResult.getUser();
-                    loaded.accept(user);
-                }
+                result = authResult;
+                loaded = true;
+                invoke();
                 updateTokens(
                         authResult.getAccessToken(),
                         authResult.getRefreshToken(),
@@ -60,9 +48,28 @@ public class UserRefresher extends LazyTokenRefresher {
             Validate.notNull(accessToken, "Access token not set");
             return this.accessToken;
         } catch (Exception e) {
-            onError.accept(e);
-            error = e;
+            loaded = true;
+            invoke();
             throw e;
         }
+    }
+
+    private void invoke() {
+        Object[] listeners = list.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == PixivOnLoadListener.class) {
+                ((PixivOnLoadListener) listeners[i + 1]).done(result);
+            }
+        }
+    }
+
+
+    public void addPixivOnLoadListener(PixivOnLoadListener l) {
+        if (loaded) l.done(result);
+        list.add(PixivOnLoadListener.class, l);
+    }
+
+    public void removePixivOnLoadListener(PixivOnLoadListener l) {
+        list.remove(PixivOnLoadListener.class, l);
     }
 }

@@ -30,6 +30,7 @@ sourceSets {
     }
 }
 dependencies {
+    implementation('me.tongfei:progressbar:0.9.4')
     implementation('org.swinglabs.swingx:swingx-all:1.6.4')
     implementation('org.imgscalr:imgscalr-lib:4.2')
     implementation('com.github.hanshsieh:pixivj:1.2.3')

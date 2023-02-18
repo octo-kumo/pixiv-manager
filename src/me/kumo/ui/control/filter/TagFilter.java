@@ -9,28 +9,25 @@ import me.kumo.ui.control.ControlPane;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import static me.kumo.io.Process.getTags;
 
 public class TagFilter extends JPanel implements IllustrationFilter, Refreshable<List<Illustration>> {
-    private final Set<String> selectedTags = new HashSet<>();
+    private final LinkedHashSet<String> selectedTags = new LinkedHashSet<>();
     private final JComboBox<String> combobox;
     private final JPanel filtersPanel;
     private final ControlPane controlPane;
 
     public TagFilter(ControlPane controlPane) {
         super(new BorderLayout());
-        setBorder(new EmptyBorder(0, 5, 0, 5));
         this.controlPane = controlPane;
         add(combobox = new JComboBox<>() {{
             setPreferredSize(new Dimension(200, getPreferredSize().height));

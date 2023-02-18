@@ -42,9 +42,9 @@ public class SearchFilter extends Box implements IllustrationFilter, ActionListe
             addActionListener(SearchFilter.this);
         }});
         add(Box.createHorizontalGlue());
-        add(new IconButton(Icons.Down, e -> {
+        add(new IconButton(Icons.down.get(), e -> {
             controlPane.setAdvancedControls(!controlPane.isAdvancedControls());
-            ((IconButton) e.getSource()).setIcon(controlPane.isAdvancedControls() ? Icons.Up : Icons.Down);
+            ((IconButton) e.getSource()).setIcon(controlPane.isAdvancedControls() ? Icons.up.get() : Icons.down.get());
         }));
         add(new IconButton(AllIcons.Action.Delete.get(), e -> {
             controlPane.reset();

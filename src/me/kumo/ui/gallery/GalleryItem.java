@@ -5,25 +5,31 @@ import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
+import me.kumo.io.pixiv.DeleteBookmark;
 import me.kumo.io.pixiv.Pixiv;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.utils.FileTransferable;
+import me.kumo.ui.utils.Formatters;
 import me.kumo.ui.utils.IconButton;
+import me.kumo.ui.viewer.IllustrationViewer;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import static me.kumo.io.NetIO.downloadIllustration;
+
 public class GalleryItem extends JPanel implements MouseListener, Refreshable<Illustration> {
     public final GalleryImage image;
-    private final IllustrationInfo info;
     private final ItemToolbar controls;
+    protected IllustrationInfo info;
     private Illustration illustration;
     private boolean shown;
 
@@ -58,8 +64,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
     public static void copyFile(Illustration illustration) {
         FileTransferable ft = new FileTransferable(List.of(LocalGallery.getImage(illustration.getId())));
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) ->
-                System.out.println("Lost ownership"));
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) -> System.out.println("Lost ownership"));
     }
 
 
@@ -101,7 +106,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
     @Override
     public void mouseClicked(MouseEvent e) {
-
+        IllustrationViewer.show((Frame) SwingUtilities.getWindowAncestor(this), illustration);
     }
 
     @Override
@@ -116,57 +121,100 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        controls.setVisible(true);
+        controls.bar1.setVisible(true);
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-        if (!new Rectangle(getLocationOnScreen(), getSize()).contains(e.getLocationOnScreen()))
-            controls.setVisible(false);
+        if (!new Rectangle(getLocationOnScreen(), getSize()).contains(e.getLocationOnScreen())) {
+            controls.bar1.setVisible(false);
+            repaint();
+        }
+    }
+
+    public void downloadIfNotExist() {
+        if (!image.downloaded()) controls.download();
     }
 
     public void updateImage() {
-        this.image.setFile(LocalGallery.getImage(String.valueOf(illustration.getId())));
+        File file = LocalGallery.getImage(String.valueOf(illustration.getId()));
+        if (file != null) this.image.setFile(file.getAbsolutePath());
+        else this.image.setFile(illustration.getImageUrls().getLarge());
     }
 
     private class ItemToolbar extends JPanel implements Refreshable<Illustration> {
-        private final IconButton refresh;
-        private final IconButton file;
-        private final IconButton copy;
-        private final LoadingIndicator refreshProgress;
-        private SwingWorker<Boolean, String> worker;
+        private final JPanel bar1;
+        private final JPanel bar2;
+        private IconButton bookmark;
+        private IconButton refresh;
+        private IconButton file;
+        private IconButton copy;
+        private LoadingIndicator refreshProgress;
+        private SwingWorker<Boolean, Object> downloadWorker;
+
+        private boolean done;
+        private long contentLength;
+        private long bytesRead;
 
         public ItemToolbar() {
-            super(new FlowLayout(FlowLayout.TRAILING));
+            super();
             setOpaque(false);
-            setVisible(false);
-            setAlignmentY(Component.BOTTOM_ALIGNMENT);
-            setBackground(new Color(0x0, true));
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            add(bar2 = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0)) {{
+                setOpaque(false);
 
-            add(refreshProgress = new LoadingIndicator(AllIcons.Action.Refresh.get()) {{
-                setVisible(false);
+                add(refreshProgress = new LoadingIndicator(Icons.download.get()) {{
+                    setVisible(false);
+                }});
+                add(refresh = new IconButton(Icons.download.get(), e -> {
+                    LocalGallery.update();
+                    updateImage();
+                    refresh(illustration);
+                    if (image.downloaded()) return;
+                    download();
+                }));
+                add(bookmark = new IconButton(Icons.heart_path.get(), e -> {
+                    bookmark.setEnabled(false);
+                    new SwingWorker<Boolean, Void>() {
+                        @Override
+                        protected Boolean doInBackground() {
+                            try {
+                                DeleteBookmark a = new DeleteBookmark(illustration.getId());
+                                if (illustration.isBookmarked()) Pixiv.getInstance().removeBookmark(a);
+                                else Pixiv.getInstance().addBookmark(a);
+                                Pixiv.getInstance().getIllustDetail(illustration.getId());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            bookmark.setEnabled(true);
+                            return true;
+                        }
+                    }.execute();
+                }));
             }});
-            add(refresh = new IconButton(AllIcons.Action.Refresh.get(), e -> {
-                LocalGallery.update();
-                updateImage();
-                refresh(illustration);
-                if (image.found()) return;
-                download();
-            }));
-
-            add(new IconButton(Icons.Pixiv, e -> open(illustration)));
-            add(copy = new IconButton(AllIcons.Action.Copy.get(), e -> copyFile(illustration)));
-            add(file = new IconButton(AllIcons.Files.Image.get(), e -> openFile(illustration)));
+            add(bar1 = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0)) {{
+                setOpaque(false);
+                setVisible(false);
+                add(new IconButton(Icons.pixiv.get(), e -> open(illustration)));
+                add(copy = new IconButton(AllIcons.Action.Copy.get(), e -> copyFile(illustration)));
+                add(file = new IconButton(AllIcons.Files.Image.get(), e -> openFile(illustration)));
+            }});
+            add(new Box.Filler(new Dimension(0, 0), new Dimension(Short.MAX_VALUE, Short.MAX_VALUE), new Dimension(Short.MAX_VALUE, Short.MAX_VALUE)));
         }
 
-        private void download() {
-            worker = new SwingWorker<>() {
+        public void download() {
+            if (downloadWorker != null && !downloadWorker.isDone()) return;
+            downloadWorker = new SwingWorker<>() {
                 @Override
                 protected Boolean doInBackground() {
                     refreshProgress.setVisible(true);
                     refreshProgress.setRunning(true);
                     refresh.setVisible(false);
-                    return LocalGallery.downloadIllustration(Pixiv.getInstance(), illustration);
+                    return downloadIllustration(Pixiv.getInstance(), illustration, (bytesRead, contentLength, done) -> {
+                        ItemToolbar.this.bytesRead = bytesRead;
+                        ItemToolbar.this.contentLength = contentLength;
+                        ItemToolbar.this.done = done;
+                    });
                 }
 
                 @Override
@@ -176,21 +224,37 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                         if (get()) {
                             updateImage();
                             refresh(illustration);
+                            info.setIllustration(illustration);
                         } else refresh.setVisible(true);
                     } catch (InterruptedException | ExecutionException ignored) {
+                        ignored.printStackTrace();
                     }
                 }
             };
-            worker.execute();
+            downloadWorker.execute();
         }
 
         @Override
         public void refresh(Illustration illustration) {
             refreshProgress.setVisible(false);
-            if (!image.found()) download();
-            refresh.setVisible(!image.found());
-            copy.setVisible(image.found());
-            file.setVisible(image.found());
+            boolean downloaded = image.downloaded();
+            refresh.setVisible(!downloaded);
+            copy.setVisible(downloaded);
+            file.setVisible(downloaded);
+            bookmark.setIcon(illustration.isBookmarked() ? Icons.heart.get() : Icons.heart_path.get());
+        }
+
+        @Override
+        public void paint(Graphics g) {
+            super.paint(g);
+            if (downloadWorker != null && !downloadWorker.isDone()) {
+                g.setColor(Color.BLACK);
+                g.fillRect(0, 0, getWidth(), 12);
+                g.setColor(done ? Color.GREEN : Color.WHITE);
+                g.fillRect(0, 0, (int) (getWidth() * (1d * bytesRead / contentLength)), 12);
+                g.setXORMode(Color.BLACK);
+                g.drawString(Formatters.formatBytes(bytesRead) + "/" + Formatters.formatBytes(contentLength), 5, 10);
+            }
         }
     }
 }

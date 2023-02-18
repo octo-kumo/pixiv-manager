@@ -1,7 +1,9 @@
-package me.kumo.ui.gallery;
+package me.kumo.ui.viewer;
 
 import me.kumo.io.ImageUtils;
+import me.kumo.io.LocalGallery;
 import me.kumo.io.pixiv.Pixiv;
+import me.kumo.ui.gallery.GalleryImage;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -22,32 +24,30 @@ import java.util.concurrent.CancellationException;
 
 import static me.kumo.io.NetIO.fetchIllustration;
 
-public class GalleryImage extends JComponent {
-    public static final int GRID_SIZE = 200;
+public class ViewerImage extends JComponent {
     public static final BasicStroke ROUND_STROKE = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-
-    private static final File CACHE = new File("cache");
+    private static final File CACHE = new File("cache.big");
 
     static {
         if (!CACHE.exists()) CACHE.mkdir();
     }
 
     private SwingWorker<BufferedImage, String> worker;
-    private BufferedImage scaledCopy;
+    private BufferedImage image;
     private String file;
-    private SrcType type;
+    private GalleryImage.SrcType type;
     private File cacheFile;
-    private boolean shown = false;
     private SwingWorker<Boolean, File> cacheWorker;
-    private double ratio;
-    private Dimension size;
 
-    public GalleryImage() {
-        setPreferredSize(new Dimension(GRID_SIZE, GRID_SIZE));
+    public ViewerImage(String url) {
+        String name = url.substring(url.lastIndexOf('/') + 1);
+        File file = LocalGallery.getImage(name);
+        if (file != null) setFile(file.getAbsolutePath());
+        else setFile(url);
     }
 
     public boolean downloaded() {
-        return found() && type == SrcType.LOCAL;
+        return found() && type == GalleryImage.SrcType.LOCAL;
     }
 
     public boolean found() {
@@ -55,19 +55,19 @@ public class GalleryImage extends JComponent {
     }
 
     public boolean loaded() {
-        return scaledCopy != null;
+        return image != null;
     }
 
     public void setFile(String file) {
         if (!Objects.equals(this.file, this.file = file)) {
-            this.scaledCopy = null;
+            this.image = null;
             String name;
             try {
                 new URL(file);
-                type = SrcType.ONLINE;
+                type = GalleryImage.SrcType.ONLINE;
                 name = file.substring(file.lastIndexOf('/') + 1);
             } catch (MalformedURLException e) {
-                type = SrcType.LOCAL;
+                type = GalleryImage.SrcType.LOCAL;
                 name = new File(file).getName();
             }
             this.cacheFile = new File(CACHE, name);
@@ -79,37 +79,22 @@ public class GalleryImage extends JComponent {
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
-//        g2d.setRenderingHints(ImageUtils.RENDERING_HINTS);
-        if (this.scaledCopy == null || !shown) {
+        g2d.setRenderingHints(ImageUtils.RENDERING_HINTS);
+        if (this.image == null) {
             double r = 40;
             double clock = (System.currentTimeMillis() % 1000) / 1000d;
             g2d.setStroke(ROUND_STROKE);
             g2d.draw(new Arc2D.Double(getWidth() / 2d - r, getHeight() / 2d - r, r * 2, r * 2, clock * 360, clock * 720 - 360, Arc2D.OPEN));
         } else {
-            ratio = Math.max(1. * getWidth() / scaledCopy.getWidth(), 1. * getHeight() / scaledCopy.getHeight());
-            int w = (int) (scaledCopy.getWidth() * ratio);
-            int h = (int) (scaledCopy.getHeight() * ratio);
-            g2d.drawImage(scaledCopy, -(w - getWidth()) / 2, -(h - getHeight()) / 2, w, h, null);
-            revalidateThumbnail();
-        }
-    }
-
-    public void setShown(boolean shown) {
-        if (shown == this.shown) return;
-        this.shown = shown;
-        if (shown) {
-            loadImage();
-        } else {
-            if (worker != null && !worker.isDone() && !worker.isCancelled()) {
-                worker.cancel(true);
-                worker = null;
-            }
-            unload();
+            double ratio = Math.min(1. * getWidth() / image.getWidth(), 1. * getHeight() / image.getHeight());
+            int w = (int) (image.getWidth() * ratio);
+            int h = (int) (image.getHeight() * ratio);
+            g2d.drawImage(image, -(w - getWidth()) / 2, -(h - getHeight()) / 2, w, h, null);
         }
     }
 
     private void loadImage() {
-        if (this.file == null || !shown || scaledCopy != null) return;
+        if (this.file == null || image != null) return;
         if (worker != null) worker.cancel(true);
         worker = new SwingWorker<>() {
             @Override
@@ -118,22 +103,13 @@ public class GalleryImage extends JComponent {
                     if (Files.size(cacheFile.toPath()) != 0) return ImageIO.read(new FileInputStream(cacheFile));
                 } catch (Exception ignored) {
                 }
-                BufferedImage read;
-                if (type == SrcType.LOCAL) {
-                    read = ImageIO.read(Files.newInputStream(Path.of(file)));
-                    if (read == null) return null;
-                } else {
-                    read = fetchIllustration(Pixiv.getInstance(), file);
-                }
-                BufferedImage image = ImageUtils.centerFill(read, getWidth(), getHeight());
-                read.flush();
-                return image;
+                return type == GalleryImage.SrcType.LOCAL ? ImageIO.read(Files.newInputStream(Path.of(file))) : fetchIllustration(Pixiv.getInstance(), file);
             }
 
             @Override
             protected void done() {
                 try {
-                    scaledCopy = get();
+                    image = get();
                 } catch (CancellationException ignored) {
                 } catch (Exception ignored) {
                     ignored.printStackTrace();
@@ -154,30 +130,15 @@ public class GalleryImage extends JComponent {
                 FileOutputStream output = new FileOutputStream(cacheFile);
                 FileLock lock = output.getChannel().tryLock();
                 if (lock == null) return false;
-                boolean success = ImageIO.write(scaledCopy, "png", output);
+                boolean success = ImageIO.write(image, "png", output);
                 output.flush();
                 output.close();
                 lock.close();
-                scaledCopy.flush();
-                scaledCopy = null;
+                image.flush();
+                image = null;
                 return success;
             }
         };
         cacheWorker.execute();
-    }
-
-    public void revalidateThumbnail() {
-        if (!loaded()) return;
-        if (Objects.equals(size, size = getSize())) return;
-        if (getHeight() > GRID_SIZE && (ratio > 1.5 || (1 / ratio) > 1.5)) {
-            System.out.println("Recalculating cache");
-            scaledCopy = null;
-            cacheFile.delete();
-            loadImage();
-        }
-    }
-
-    public enum SrcType {
-        ONLINE, LOCAL
     }
 }

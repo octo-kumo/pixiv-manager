@@ -8,18 +8,24 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
-public class ControlPanel extends JPanel implements Refreshable<List<Illustration>>, Supplier<ArrayList<Illustration>> {
+public class GalleryManager extends JPanel implements Refreshable<List<Illustration>>, Supplier<ArrayList<Illustration>> {
     protected final ControlPane filter;
     protected final Gallery gallery;
 
     protected ArrayList<Illustration> illustrations;
 
-    public ControlPanel() {
+    public GalleryManager() {
         super(new BorderLayout());
         add(filter = new ControlPane(this, this), BorderLayout.NORTH);
         add(gallery = new Gallery(), BorderLayout.CENTER);
+    }
+
+    public void refresh(Illustration illustration) {
+        illustrations.replaceAll(i -> Objects.equals(i.getId(), illustration.getId()) ? illustration : i);
+        gallery.refresh(illustration);
     }
 
     @Override

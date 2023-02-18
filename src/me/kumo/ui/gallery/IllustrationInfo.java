@@ -8,7 +8,6 @@ import me.kumo.ui.utils.Formatters;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.io.IOException;
 import java.nio.file.Files;
 
 public class IllustrationInfo extends JPanel {
@@ -22,6 +21,7 @@ public class IllustrationInfo extends JPanel {
     private JLabel r18;
     private JLabel pageNumber;
     private JLabel imageSize;
+    private JLabel ai;
 
     public IllustrationInfo() {
         super(new BorderLayout());
@@ -30,9 +30,9 @@ public class IllustrationInfo extends JPanel {
         add(new Box(BoxLayout.Y_AXIS) {
             {
                 setBorder(new EmptyBorder(5, 5, 5, 5));
-                add(id = new JLabel(Icons.Empty));
-                add(views = new JLabel(Icons.Eye));
-                add(bookmarks = new JLabel(Icons.Heart));
+                add(id = new JLabel(Icons.empty.get()));
+                add(views = new JLabel(Icons.eye.get()));
+                add(bookmarks = new JLabel(Icons.heart.get()));
             }
 
             protected void paintComponent(Graphics g) {
@@ -46,6 +46,13 @@ public class IllustrationInfo extends JPanel {
                 add(r18 = new JLabel("R-18") {{
                     setForeground(Color.WHITE);
                     setBackground(Color.RED);
+                    setFont(getFont().deriveFont(Font.BOLD));
+                    setBorder(new EmptyBorder(2, 4, 2, 4));
+                    setOpaque(true);
+                }});
+                add(ai = new JLabel("AI") {{
+                    setForeground(Color.WHITE);
+                    setBackground(Color.BLUE);
                     setFont(getFont().deriveFont(Font.BOLD));
                     setBorder(new EmptyBorder(2, 4, 2, 4));
                     setOpaque(true);
@@ -98,11 +105,13 @@ public class IllustrationInfo extends JPanel {
         pageNumber.setVisible(illustration.getPageCount() != 1);
         pageNumber.setText("\u00D7" + illustration.getPageCount());
 
+        ai.setVisible(illustration.isAI());
+
         try {
             long size = Files.size(LocalGallery.getImage(illustration.getId()).toPath());
             fileSize.setText(Formatters.formatBytes(size));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            fileSize.setText("NA");
         }
     }
 }

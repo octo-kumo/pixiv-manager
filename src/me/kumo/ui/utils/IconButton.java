@@ -1,12 +1,16 @@
 package me.kumo.ui.utils;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class IconButton extends JButton implements MouseListener {
+
+    private Border border;
+
     public IconButton() {
         this(null, null);
     }
@@ -14,10 +18,10 @@ public class IconButton extends JButton implements MouseListener {
     public IconButton(Icon icon, ActionListener actionListener) {
         super(icon);
         addActionListener(actionListener);
-        setPreferredSize(new Dimension(2 * icon.getIconWidth(), 2 * icon.getIconHeight()));
+        setPreferredSize(new Dimension((int) (1.8 * icon.getIconWidth()), (int) (1.8 * icon.getIconHeight())));
         setContentAreaFilled(false);
         addMouseListener(this);
-        setBorder(null);
+        setBorderPainted(false);
     }
 
     @Override
@@ -37,11 +41,11 @@ public class IconButton extends JButton implements MouseListener {
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        setBorder(UIManager.getBorder("Button.border"));
+        setBorderPainted(true);
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-        setBorder(null);
+        setBorderPainted(false);
     }
 }

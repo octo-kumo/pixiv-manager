@@ -2,11 +2,14 @@ package me.kumo.ui.control;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.Icons;
+import me.kumo.io.LocalGallery;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
@@ -28,10 +31,18 @@ public class SortPane extends JPanel implements ActionListener {
         this.controlPane = controlPane;
 
         options.add(new SortOption("ID", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getId), this));
-        options.add(new SortOption("View", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalView), this));
-        options.add(new SortOption("Bookmark", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalBookmarks), this));
-        options.add(new SortOption("Bookmark Date", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getCreateDate), this));
+        options.add(new SortOption("Views", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalView), this));
+        options.add(new SortOption("Bookmarks", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalBookmarks), this));
+        options.add(new SortOption("Date", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getCreateDate), this));
         options.add(new SortOption("Sanity", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getSanityLevel), this));
+        options.add(new SortOption("Pixel", SortOption.SortDirection.UNDEFINED, Comparator.comparing(i -> i.getWidth() * i.getHeight()), this));
+        options.add(new SortOption("File", SortOption.SortDirection.UNDEFINED, Comparator.comparing(i -> {
+            try {
+                return Files.size(LocalGallery.getImage(i.getId()).toPath());
+            } catch (IOException e) {
+                return 0L;
+            }
+        }), this));
 
         options.forEach(this::add);
     }
@@ -72,13 +83,13 @@ public class SortPane extends JPanel implements ActionListener {
         private static Icon getIcon(SortDirection direction) {
             switch (direction) {
                 case UNDEFINED -> {
-                    return Icons.Empty;
+                    return Icons.empty.get();
                 }
                 case UP -> {
-                    return Icons.Up;
+                    return Icons.up.get();
                 }
                 case DOWN -> {
-                    return Icons.Down;
+                    return Icons.down.get();
                 }
                 default -> throw new IllegalStateException("Unexpected value: " + direction);
             }

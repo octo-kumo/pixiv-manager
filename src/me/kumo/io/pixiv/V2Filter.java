@@ -4,7 +4,7 @@ import com.github.hanshsieh.pixivj.util.QueryParamConverter;
 import com.google.gson.annotations.SerializedName;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class BookmarkFilter {
+public class V2Filter {
     //https://www.pixiv.net/ajax/user/43169692/illusts/bookmarks?tag=&offset=0&limit=48&rest=show&lang=en
 
     @SerializedName("user_id")
@@ -18,14 +18,17 @@ public class BookmarkFilter {
     @SerializedName("mode")
     private Mode mode = Mode.ALL;
 
-    public BookmarkFilter(String userId) {
+    public V2Filter() {
+    }
+
+    public V2Filter(String userId) {
         setUserID(userId);
     }
 
     @NonNull
-    public static BookmarkFilter fromUrl(@NonNull String url) throws IllegalArgumentException {
+    public static V2Filter fromUrl(@NonNull String url) throws IllegalArgumentException {
         return new QueryParamConverter()
-                .fromQueryParams(url, BookmarkFilter.class);
+                .fromQueryParams(url, V2Filter.class);
     }
 
     public String getUserID() {
@@ -72,7 +75,9 @@ public class BookmarkFilter {
         @SerializedName("public")
         PUBLIC,
         @SerializedName("private")
-        PRIVATE
+        PRIVATE,
+        @SerializedName("all")
+        ALL
     }
 
     public enum Mode {
