@@ -32,13 +32,13 @@ public class SearchFilter extends Box implements IllustrationFilter, ActionListe
         searchbar.setMaximumSize(new Dimension(200, searchbar.getPreferredSize().height));
         searchbar.addActionListener(this);
         add(searchbar);
-        add(searchInTags = new JCheckBox("Tags") {{
+        add(searchInTags = new JCheckBox("Tags", true) {{
             addActionListener(SearchFilter.this);
         }});
-        add(searchInAuthor = new JCheckBox("Author") {{
+        add(searchInAuthor = new JCheckBox("Author", true) {{
             addActionListener(SearchFilter.this);
         }});
-        add(ignoreCase = new JCheckBox("Ignore Case") {{
+        add(ignoreCase = new JCheckBox("Ignore Case", true) {{
             addActionListener(SearchFilter.this);
         }});
         add(Box.createHorizontalGlue());

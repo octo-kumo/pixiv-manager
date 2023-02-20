@@ -6,6 +6,7 @@ import com.github.hanshsieh.pixivj.model.RecommendedIllustsFilter;
 import me.kumo.io.pixiv.Pixiv;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 
 public class RecommendManager extends GalleryManager {
@@ -29,6 +30,11 @@ public class RecommendManager extends GalleryManager {
             if (result == null) return;
             getMoreRecommend();
         }));
+        add(new JPanel(new FlowLayout(FlowLayout.LEADING)) {{
+            add(new JButton("More!") {{
+                addActionListener(e -> getMoreRecommend());
+            }});
+        }}, BorderLayout.SOUTH);
     }
 
 
@@ -44,7 +50,7 @@ public class RecommendManager extends GalleryManager {
                     recommendNextURL = illusts.getNextUrl();
                     System.out.println("getMoreRecommend :: " + illusts.getIllusts().size());
                     recommend.addAll(illusts.getIllusts());
-                    setIllustrations(recommend);
+                    append(illusts.getIllusts());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

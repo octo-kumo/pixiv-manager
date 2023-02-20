@@ -110,6 +110,7 @@ public class ViewerImage extends JComponent {
             protected void done() {
                 try {
                     image = get();
+                    saveCache();
                 } catch (CancellationException ignored) {
                 } catch (Exception ignored) {
                     ignored.printStackTrace();
@@ -121,7 +122,7 @@ public class ViewerImage extends JComponent {
         worker.execute();
     }
 
-    public void unload() {
+    public void saveCache() {
         if (!loaded()) return;
         if (cacheWorker != null && !cacheWorker.isDone()) return;
         cacheWorker = new SwingWorker<>() {

@@ -58,7 +58,7 @@ public class ControlPane extends Box implements Refreshable<List<Illustration>> 
         sorters.reset();
     }
 
-    public List<Illustration> filterAndSort(ArrayList<Illustration> illustrations) {
+    public List<Illustration> filterAndSort(List<Illustration> illustrations) {
         Stream<Illustration> stream = illustrations.stream();
         stream = searchFilter.filter(stream);
         stream = optionFilter.filter(stream);

@@ -2,6 +2,7 @@ package me.kumo.ui.gallery;
 
 import me.kumo.io.ImageUtils;
 import me.kumo.io.pixiv.Pixiv;
+import me.kumo.ui.utils.Curves;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -27,6 +28,9 @@ public class GalleryImage extends JComponent {
     public static final BasicStroke ROUND_STROKE = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
     private static final File CACHE = new File("cache");
+    private static final double DECAY_RATE = 0.1;
+    private static final double DECAY_RATE_I = 1 - DECAY_RATE;
+    private static final double PARALLAX_AMOUNT = 20;
 
     static {
         if (!CACHE.exists()) CACHE.mkdir();
@@ -41,6 +45,10 @@ public class GalleryImage extends JComponent {
     private SwingWorker<Boolean, File> cacheWorker;
     private double ratio;
     private Dimension size;
+    private double px = 0, py = 0;
+    private double tpx = 0, tpy = 0;
+    private double rpx = 0, rpy = 0;
+    private boolean hover;
 
     public GalleryImage() {
         setPreferredSize(new Dimension(GRID_SIZE, GRID_SIZE));
@@ -78,18 +86,32 @@ public class GalleryImage extends JComponent {
 
     @Override
     public void paintComponent(Graphics g) {
+        if (!shown || !isDisplayable()) return;
         Graphics2D g2d = (Graphics2D) g;
 //        g2d.setRenderingHints(ImageUtils.RENDERING_HINTS);
-        if (this.scaledCopy == null || !shown) {
+        if (this.scaledCopy == null) {
             double r = 40;
             double clock = (System.currentTimeMillis() % 1000) / 1000d;
             g2d.setStroke(ROUND_STROKE);
             g2d.draw(new Arc2D.Double(getWidth() / 2d - r, getHeight() / 2d - r, r * 2, r * 2, clock * 360, clock * 720 - 360, Arc2D.OPEN));
         } else {
-            ratio = Math.max(1. * getWidth() / scaledCopy.getWidth(), 1. * getHeight() / scaledCopy.getHeight());
+            double enlarge = Curves.BezierBlend(Math.min(1, (System.currentTimeMillis() - hoverChangeTime) / 200d));
+            if (!hover) enlarge = 1 - enlarge;
+            ratio = Math.max((getWidth() + enlarge * PARALLAX_AMOUNT * 2) / scaledCopy.getWidth(), (getHeight() + enlarge * PARALLAX_AMOUNT * 2) / scaledCopy.getHeight());
             int w = (int) (scaledCopy.getWidth() * ratio);
             int h = (int) (scaledCopy.getHeight() * ratio);
-            g2d.drawImage(scaledCopy, -(w - getWidth()) / 2, -(h - getHeight()) / 2, w, h, null);
+            g2d.drawImage(scaledCopy,
+                    (int) (-(w - getWidth()) / 2 + px * (w - getWidth()) / 2),
+                    (int) (-(h - getHeight()) / 2 + py * (h - getHeight()) / 2),
+                    w, h, null);
+            if (!hover) {
+                tpx = rpx;
+                tpy = rpy;
+            }
+            if (Math.abs(px - tpx) > 0.005) px = px * DECAY_RATE_I + tpx * DECAY_RATE;
+            else px = tpx;
+            if (Math.abs(py - tpy) > 0.005) py = py * DECAY_RATE_I + tpy * DECAY_RATE;
+            else py = tpy;
             revalidateThumbnail();
         }
     }
@@ -175,6 +197,30 @@ public class GalleryImage extends JComponent {
             cacheFile.delete();
             loadImage();
         }
+    }
+
+    public void setParallax(double x, double y) {
+        this.tpx = x;
+        this.tpy = y;
+    }
+
+    public void setRestParallax(double x, double y) {
+        if (!hover && this.rpx == this.px && this.rpy == this.py) {
+            this.px = x;
+            this.py = y;
+        }
+        this.rpx = x;
+        this.rpy = y;
+    }
+
+    private long hoverChangeTime;
+
+    public void setHover(boolean hover) {
+        if (this.hover != (this.hover = hover)) hoverChangeTime = System.currentTimeMillis();
+    }
+
+    public boolean isHover() {
+        return hover;
     }
 
     public enum SrcType {

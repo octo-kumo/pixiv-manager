@@ -23,6 +23,7 @@ public class OptionFilter extends JPanel implements ActionListener, Illustration
         options = new ArrayList<>();
         options.add(new ToggleOption("R-18", i -> i.getXRestrict() != 0, this));
         options.add(new ToggleOption("AI", Illustration::isAI, this));
+        options.add(new ToggleOption("Bookmarked", Illustration::isBookmarked, this));
         options.add(new ToggleOption("Visible", Illustration::isVisible, this));
         options.add(new ToggleOption("Restricted", i -> i.getRestrict() != 0, this));
         options.add(new ToggleOption("Missing", i -> LocalGallery.getImage(i.getId()) == null, this));

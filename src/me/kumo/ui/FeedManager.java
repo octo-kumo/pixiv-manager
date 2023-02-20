@@ -62,7 +62,7 @@ public class FeedManager extends GalleryManager {
                             pixiv.requestSender.send(pixiv.createApiReqBuilder().url(followNextURL).get().build(), SearchedIllusts.class);
                     followNextURL = illusts.getNextUrl();
                     follow.addAll(illusts.getIllusts());
-                    setIllustrations(follow);
+                    append(illusts.getIllusts());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -82,7 +82,7 @@ public class FeedManager extends GalleryManager {
                             pixiv.requestSender.send(pixiv.createApiReqBuilder().url(rankNextURL).get().build(), RankedIllusts.class);
                     rankNextURL = illusts.getNextUrl();
                     rank.addAll(illusts.getIllusts());
-                    rankGallery.refresh(rank);
+                    rankGallery.append(illusts.getIllusts());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

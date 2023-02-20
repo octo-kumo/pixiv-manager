@@ -33,6 +33,7 @@ public class SortPane extends JPanel implements ActionListener {
         options.add(new SortOption("ID", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getId), this));
         options.add(new SortOption("Views", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalView), this));
         options.add(new SortOption("Bookmarks", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getTotalBookmarks), this));
+        options.add(new SortOption("BpV", SortOption.SortDirection.UNDEFINED, Comparator.comparing(illustration -> illustration.getTotalBookmarks() * 1.0 / Math.max(1, illustration.getTotalView())), this));
         options.add(new SortOption("Date", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getCreateDate), this));
         options.add(new SortOption("Sanity", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getSanityLevel), this));
         options.add(new SortOption("Pixel", SortOption.SortDirection.UNDEFINED, Comparator.comparing(i -> i.getWidth() * i.getHeight()), this));

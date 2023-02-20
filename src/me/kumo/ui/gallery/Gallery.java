@@ -8,16 +8,16 @@ import me.kumo.ui.utils.Formatters;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
+import java.awt.event.*;
+import java.util.Iterator;
 import java.util.List;
-import java.util.*;
+import java.util.Objects;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>>, Iterable<GalleryItem> {
+public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>>, Iterable<GalleryItem>, MouseWheelListener, ActionListener, AdjustmentListener {
     public final JPanel grid;
     protected final ConcurrentHashMap<Long, GalleryItem> holderMap = new ConcurrentHashMap<>();
     private final Stack<GalleryItem> usedPool = new Stack<>();
@@ -35,22 +35,63 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         super(null, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         this.colCount = colCount;
         this.grid = new JPanel();
-        new Timer(8, e -> repaint()).start();
+        new Timer(8, this).start();
         getScrollPane().setViewportView(this.grid);
         getVerticalScrollBar().setUnitIncrement(32);
         setPreferredSize(new Dimension(720, 480));
-        getScrollPane().getViewport().addChangeListener(e -> updateShownStatus());
+        getScrollPane().setWheelScrollingEnabled(false);
+        getScrollPane().addMouseWheelListener(this);
+        getVerticalScrollBar().addAdjustmentListener(this);
         addComponentListener(this);
     }
 
-    private void updateShownStatus() {
+    protected long lastShownUpdate = 0;
+
+    protected void updateShownStatus() {
+        if ((System.nanoTime() - lastShownUpdate) / 1e9 < 0.032) return;
+        lastShownUpdate = System.nanoTime();
         Rectangle visibleRect = getScrollPane().getViewport().getViewRect();
-        Arrays.stream(grid.getComponents()).filter(Objects::nonNull).forEach(component -> ((GalleryItem) component).setShown(component.getBounds().intersects(visibleRect)));
+        for (Component c : grid.getComponents()) {
+            if (!(c instanceof GalleryItem item)) continue;
+            item.setShown(item.isDisplayable() && visibleRect.intersects(item.getBounds()));
+            if (item.isShown()) {
+                double px = 2 * (visibleRect.getCenterX() - item.getBounds().getCenterX()) / visibleRect.getWidth();
+                double py = 2 * (visibleRect.getCenterY() - item.getBounds().getCenterY()) / visibleRect.getHeight();
+                item.image.setRestParallax(px, py);
+            }
+        }
     }
 
     public void refresh(Illustration illustration) {
         usedPool.stream().filter(p -> Objects.equals(p.getIllustration().getId(), illustration.getId()))
                 .forEach(i -> i.refresh(illustration));
+    }
+
+    public void append(List<Illustration> illustrations) {
+        if (worker != null) worker.cancel(true);
+        worker = new SwingWorker<>() {
+            @Override
+            protected Object doInBackground() {
+                updateLayout(illustrations.size() + layoutItemCount);
+                for (Illustration illustration : illustrations) {
+                    GalleryItem holder = getRefreshOrCreate(illustration);
+                    RepaintManager.currentManager(grid).markCompletelyClean(holder);
+                    usedPool.push(holder);
+                    grid.add(holder);
+                    try {
+                        if (isCancelled()) return null;
+                        Thread.sleep(0);
+                    } catch (InterruptedException ignored) {
+                        ignored.printStackTrace();
+                        return null;
+                    }
+                }
+                grid.revalidate();
+                updateShownStatus();
+                return null;
+            }
+        };
+        SwingUtilities.invokeLater(() -> worker.execute());
     }
 
     public void refresh(List<Illustration> illustrations) {
@@ -87,7 +128,6 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
                 grid.revalidate();
                 SwingUtilities.invokeLater(() -> {
                     updateShownStatus();
-                    repaint();
                     getHorizontalScrollBar().setValue(hScroll);
                     getVerticalScrollBar().setValue(vScroll);
                 });
@@ -106,7 +146,6 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
 
     @Override
     public void paint(Graphics g) {
-        if (System.nanoTime() - this.last_frame_nanos < 16e-3) return;
         super.paint(g);
         drawDebug(g);
     }
@@ -180,5 +219,28 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
     @Override
     public Iterator<GalleryItem> iterator() {
         return usedPool.stream().iterator();
+    }
+
+    protected double target = 0;
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        repaint();
+        if (getVerticalScrollBar().getValue() != Math.round(target)) {
+            getVerticalScrollBar().setValue((int) (getVerticalScrollBar().getValue() * 0.9 + target * 0.1));
+            updateShownStatus();
+        }
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        target = Math.max(getVerticalScrollBar().getMinimum(), Math.min(getVerticalScrollBar().getMaximum(), target + e.getPreciseWheelRotation() * 100));
+    }
+
+    @Override
+    public void adjustmentValueChanged(AdjustmentEvent e) {
+        if (e.getValueIsAdjusting()) {
+            if (target != (target = e.getValue())) updateShownStatus();
+        }
     }
 }

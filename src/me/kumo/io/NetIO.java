@@ -3,15 +3,19 @@ package me.kumo.io;
 import com.github.hanshsieh.pixivj.exception.PixivException;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.pixiv.Pixiv;
+import me.kumo.ui.utils.FileTransferable;
 import okhttp3.Response;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -78,5 +82,32 @@ public class NetIO {
 
     public interface ProgressListener {
         void update(long bytesRead, long contentLength, boolean done);
+    }
+
+    public static void open(URI uri) {
+        try {
+            Desktop.getDesktop().browse(uri);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void open(Illustration illustration) {
+        if (illustration == null) return;
+        open(URI.create("https://pixiv.net/artworks/" + illustration.getId()));
+    }
+
+    public static void openFile(Illustration illustration) {
+        if (illustration == null) return;
+        try {
+            Desktop.getDesktop().open(LocalGallery.getImage(illustration.getId()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void copyFile(Illustration illustration) {
+        FileTransferable ft = new FileTransferable(List.of(LocalGallery.getImage(illustration.getId())));
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) -> System.out.println("Lost ownership"));
     }
 }

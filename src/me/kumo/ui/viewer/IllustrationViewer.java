@@ -17,17 +17,19 @@ public class IllustrationViewer extends JPanel {
         super(new BorderLayout());
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
         size.setSize(illustration.getWidth() * size.getHeight() * 0.7 / illustration.getHeight(), size.getHeight() * 0.7);
-        setPreferredSize(size);
+        JComponent center;
         if (illustration.getPageCount() > 1) {
-            add(new JTabbedPane() {{
+            add(center = new JTabbedPane() {{
                 List<MetaPage> metaPages = illustration.getMetaPages();
                 for (int i = 0; i < metaPages.size(); i++) {
                     addTab(String.valueOf(i + 1), new ViewerImage(LocalGallery.getBestQuality(metaPages.get(i).getImageUrls())));
                 }
             }}, BorderLayout.CENTER);
         } else {
-            add(new ViewerImage(illustration.getMetaSinglePage().getOriginalImageUrl()), BorderLayout.CENTER);
+            add(center = new ViewerImage(illustration.getMetaSinglePage().getOriginalImageUrl()), BorderLayout.CENTER);
         }
+        center.setPreferredSize(size);
+        add(new BigIllustrationInfo(illustration), BorderLayout.EAST);
 
         timer = new Timer(16, e -> repaint());
     }

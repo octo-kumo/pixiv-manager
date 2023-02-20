@@ -5,10 +5,10 @@ import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
+import me.kumo.io.NetIO;
 import me.kumo.io.pixiv.DeleteBookmark;
 import me.kumo.io.pixiv.Pixiv;
 import me.kumo.ui.Refreshable;
-import me.kumo.ui.utils.FileTransferable;
 import me.kumo.ui.utils.Formatters;
 import me.kumo.ui.utils.IconButton;
 import me.kumo.ui.viewer.IllustrationViewer;
@@ -17,16 +17,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static me.kumo.io.NetIO.downloadIllustration;
 
-public class GalleryItem extends JPanel implements MouseListener, Refreshable<Illustration> {
+public class GalleryItem extends JPanel implements MouseListener, Refreshable<Illustration>, MouseMotionListener {
     public final GalleryImage image;
     private final ItemToolbar controls;
     protected IllustrationInfo info;
@@ -39,34 +36,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         setPreferredSize(new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE));
 
         addMouseListener(this);
+        addMouseMotionListener(this);
         add(controls = new ItemToolbar());
         add(info = new IllustrationInfo());
         add(image = new GalleryImage());
     }
-
-    public static void open(Illustration illustration) {
-        if (illustration == null) return;
-        try {
-            Desktop.getDesktop().browse(new URI("https://pixiv.net/artworks/" + illustration.getId()));
-        } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void openFile(Illustration illustration) {
-        if (illustration == null) return;
-        try {
-            Desktop.getDesktop().open(LocalGallery.getImage(illustration.getId()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void copyFile(Illustration illustration) {
-        FileTransferable ft = new FileTransferable(List.of(LocalGallery.getImage(illustration.getId())));
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) -> System.out.println("Lost ownership"));
-    }
-
 
     public Illustration getIllustration() {
         return illustration;
@@ -121,14 +95,15 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
     @Override
     public void mouseEntered(MouseEvent e) {
+        image.setHover(true);
         controls.bar1.setVisible(true);
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
         if (!new Rectangle(getLocationOnScreen(), getSize()).contains(e.getLocationOnScreen())) {
+            image.setHover(false);
             controls.bar1.setVisible(false);
-            repaint();
         }
     }
 
@@ -140,6 +115,16 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         File file = LocalGallery.getImage(String.valueOf(illustration.getId()));
         if (file != null) this.image.setFile(file.getAbsolutePath());
         else this.image.setFile(illustration.getImageUrls().getLarge());
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        image.setParallax(-e.getX() * 2d / getWidth() + 1, -e.getY() * 2d / getHeight() + 1);
     }
 
     private class ItemToolbar extends JPanel implements Refreshable<Illustration> {
@@ -181,7 +166,10 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                             try {
                                 DeleteBookmark a = new DeleteBookmark(illustration.getId());
                                 if (illustration.isBookmarked()) Pixiv.getInstance().removeBookmark(a);
-                                else Pixiv.getInstance().addBookmark(a);
+                                else {
+                                    Pixiv.getInstance().addBookmark(a);
+                                    downloadIfNotExist();
+                                }
                                 Pixiv.getInstance().getIllustDetail(illustration.getId());
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -195,9 +183,9 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
             add(bar1 = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0)) {{
                 setOpaque(false);
                 setVisible(false);
-                add(new IconButton(Icons.pixiv.get(), e -> open(illustration)));
-                add(copy = new IconButton(AllIcons.Action.Copy.get(), e -> copyFile(illustration)));
-                add(file = new IconButton(AllIcons.Files.Image.get(), e -> openFile(illustration)));
+                add(new IconButton(Icons.pixiv.get(), e -> NetIO.open(illustration)));
+                add(copy = new IconButton(AllIcons.Action.Copy.get(), e -> NetIO.copyFile(illustration)));
+                add(file = new IconButton(AllIcons.Files.Image.get(), e -> NetIO.openFile(illustration)));
             }});
             add(new Box.Filler(new Dimension(0, 0), new Dimension(Short.MAX_VALUE, Short.MAX_VALUE), new Dimension(Short.MAX_VALUE, Short.MAX_VALUE)));
         }

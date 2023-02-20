@@ -51,4 +51,11 @@ public class GalleryManager extends JPanel implements Refreshable<List<Illustrat
     public void tapGallery() {
         gallery.tapGallery();
     }
+
+    public void append(List<Illustration> illustrations) {
+        if (this.illustrations == null) this.illustrations = new ArrayList<>();
+        this.illustrations.addAll(illustrations);
+        filter.refresh(this.illustrations);
+        gallery.append(filter.filterAndSort(illustrations));
+    }
 }

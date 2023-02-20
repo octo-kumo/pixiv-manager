@@ -98,7 +98,7 @@ public class IllustrationInfo extends JPanel {
         bookmarks.setText(String.valueOf(illustration.getTotalBookmarks()));
         views.setText(String.valueOf(illustration.getTotalView()));
 
-        author.setText(illustration.getUser().getName());
+        author.setText(illustration.getUser().getName() + (illustration.getUser().isFollowed() ? " \u2713" : ""));
         imageSize.setText(illustration.getWidth() + "\u00D7" + illustration.getHeight());
         r18.setVisible(illustration.getXRestrict() != 0);
         sanity.setText(String.valueOf(illustration.getSanityLevel()));
