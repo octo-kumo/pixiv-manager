@@ -37,11 +37,10 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         this.grid = new JPanel();
         new Timer(8, this).start();
         getScrollPane().setViewportView(this.grid);
-        getVerticalScrollBar().setUnitIncrement(32);
         setPreferredSize(new Dimension(720, 480));
         getScrollPane().setWheelScrollingEnabled(false);
         getScrollPane().addMouseWheelListener(this);
-        getVerticalScrollBar().addAdjustmentListener(this);
+        getSmoothScrollbar().addAdjustmentListener(this);
         addComponentListener(this);
     }
 
@@ -221,26 +220,33 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         return usedPool.stream().iterator();
     }
 
-    protected double target = 0;
+    protected JScrollBar getSmoothScrollbar() {
+        return getVerticalScrollBar();
+    }
+
+    protected double scrollTarget = 0;
+    protected double scrollPosition = 0;
 
     @Override
     public void actionPerformed(ActionEvent e) {
         repaint();
-        if (getVerticalScrollBar().getValue() != Math.round(target)) {
-            getVerticalScrollBar().setValue((int) (getVerticalScrollBar().getValue() * 0.9 + target * 0.1));
+        scrollPosition = scrollPosition * 0.9 + scrollTarget * 0.1;
+        if (Math.round(scrollPosition) != getSmoothScrollbar().getValue()) {
+            getSmoothScrollbar().setValue((int) Math.round(scrollPosition));
             updateShownStatus();
         }
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        target = Math.max(getVerticalScrollBar().getMinimum(), Math.min(getVerticalScrollBar().getMaximum(), target + e.getPreciseWheelRotation() * 100));
+        scrollTarget = Math.max(getSmoothScrollbar().getMinimum(), Math.min(getSmoothScrollbar().getMaximum() - getSmoothScrollbar().getVisibleAmount(), scrollTarget + e.getPreciseWheelRotation() * 100));
     }
 
     @Override
     public void adjustmentValueChanged(AdjustmentEvent e) {
         if (e.getValueIsAdjusting()) {
-            if (target != (target = e.getValue())) updateShownStatus();
+            if (scrollPosition != (scrollPosition = e.getValue())) updateShownStatus();
+            scrollTarget = scrollPosition;
         }
     }
 }

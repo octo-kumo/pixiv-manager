@@ -24,17 +24,19 @@ import java.util.concurrent.ExecutionException;
 import static me.kumo.io.NetIO.downloadIllustration;
 
 public class GalleryItem extends JPanel implements MouseListener, Refreshable<Illustration>, MouseMotionListener {
+    public static final int MOUSE_DRAG_TOLERANCE = 25;
     public final GalleryImage image;
     private final ItemToolbar controls;
     protected IllustrationInfo info;
     private Illustration illustration;
     private boolean shown;
+    private MouseEvent mouseDownEvent;
 
     public GalleryItem() {
         setLayout(new OverlayLayout(this));
 
         setPreferredSize(new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE));
-
+        setTransferHandler(new GalleryItemHandler());
         addMouseListener(this);
         addMouseMotionListener(this);
         add(controls = new ItemToolbar());
@@ -78,19 +80,31 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         if (!aFlag) image.unload();
     }
 
+    public void downloadIfNotExist() {
+        if (!image.downloaded()) controls.download();
+    }
+
+    public void updateImage() {
+        File file = LocalGallery.getImage(String.valueOf(illustration.getId()));
+        if (file != null) this.image.setFile(file.getAbsolutePath());
+        else this.image.setFile(illustration.getImageUrls().getLarge());
+    }
+
     @Override
     public void mouseClicked(MouseEvent e) {
-        IllustrationViewer.show((Frame) SwingUtilities.getWindowAncestor(this), illustration);
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-
+        image.setPressed(true);
+        mouseDownEvent = e;
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        image.setPressed(false);
+        if (mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) < MOUSE_DRAG_TOLERANCE)
+            IllustrationViewer.show((Frame) SwingUtilities.getWindowAncestor(this), illustration);
     }
 
     @Override
@@ -107,19 +121,17 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         }
     }
 
-    public void downloadIfNotExist() {
-        if (!image.downloaded()) controls.download();
-    }
-
-    public void updateImage() {
-        File file = LocalGallery.getImage(String.valueOf(illustration.getId()));
-        if (file != null) this.image.setFile(file.getAbsolutePath());
-        else this.image.setFile(illustration.getImageUrls().getLarge());
-    }
-
     @Override
     public void mouseDragged(MouseEvent e) {
-
+        image.setParallax(-e.getX() * 2d / getWidth() + 1, -e.getY() * 2d / getHeight() + 1);
+        if (mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) > MOUSE_DRAG_TOLERANCE) {
+            image.setPressed(false);
+            JComponent c = (JComponent) e.getSource();
+            TransferHandler handler = c.getTransferHandler();
+            handler.setDragImage(image.scaledCopy);
+            handler.exportAsDrag(c, mouseDownEvent, TransferHandler.COPY);
+            mouseDownEvent = null;
+        }
     }
 
     @Override

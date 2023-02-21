@@ -37,7 +37,7 @@ public class GalleryImage extends JComponent {
     }
 
     private SwingWorker<BufferedImage, String> worker;
-    private BufferedImage scaledCopy;
+    public BufferedImage scaledCopy;
     private String file;
     private SrcType type;
     private File cacheFile;
@@ -48,7 +48,9 @@ public class GalleryImage extends JComponent {
     private double px = 0, py = 0;
     private double tpx = 0, tpy = 0;
     private double rpx = 0, rpy = 0;
-    private boolean hover;
+
+    private boolean hover, pressed;
+    private long hoverChangeTime, pressedChangeTime;
 
     public GalleryImage() {
         setPreferredSize(new Dimension(GRID_SIZE, GRID_SIZE));
@@ -97,6 +99,10 @@ public class GalleryImage extends JComponent {
         } else {
             double enlarge = Curves.BezierBlend(Math.min(1, (System.currentTimeMillis() - hoverChangeTime) / 200d));
             if (!hover) enlarge = 1 - enlarge;
+            double pEnlarge = Curves.BezierBlend(Math.min(1, (System.currentTimeMillis() - pressedChangeTime) / 100d));
+            if (!pressed) pEnlarge = 1 - pEnlarge;
+            enlarge += pEnlarge * 0.2;
+
             ratio = Math.max((getWidth() + enlarge * PARALLAX_AMOUNT * 2) / scaledCopy.getWidth(), (getHeight() + enlarge * PARALLAX_AMOUNT * 2) / scaledCopy.getHeight());
             int w = (int) (scaledCopy.getWidth() * ratio);
             int h = (int) (scaledCopy.getHeight() * ratio);
@@ -213,14 +219,20 @@ public class GalleryImage extends JComponent {
         this.rpy = y;
     }
 
-    private long hoverChangeTime;
-
     public void setHover(boolean hover) {
         if (this.hover != (this.hover = hover)) hoverChangeTime = System.currentTimeMillis();
     }
 
     public boolean isHover() {
         return hover;
+    }
+
+    public void setPressed(boolean pressed) {
+        if (this.pressed != (this.pressed = pressed)) pressedChangeTime = System.currentTimeMillis();
+    }
+
+    public boolean isPressed() {
+        return pressed;
     }
 
     public enum SrcType {
