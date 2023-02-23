@@ -138,22 +138,25 @@ public class GalleryImage extends JComponent {
 
     private void loadImage() {
         if (this.file == null || !shown || scaledCopy != null) return;
-        if (worker != null) worker.cancel(true);
+        if (worker != null && !worker.isDone()) return;
         worker = new SwingWorker<>() {
             @Override
-            protected BufferedImage doInBackground() throws Exception {
+            protected BufferedImage doInBackground() {
                 if (cacheFile.exists()) try {
                     if (Files.size(cacheFile.toPath()) != 0) return ImageIO.read(new FileInputStream(cacheFile));
                 } catch (Exception ignored) {
                 }
                 BufferedImage read;
-                if (type == SrcType.LOCAL) {
-                    read = ImageIO.read(Files.newInputStream(Path.of(file)));
-                    if (read == null) return null;
-                } else {
-                    read = fetchIllustration(Pixiv.getInstance(), file);
+                try {
+                    if (type == SrcType.LOCAL)
+                        read = Objects.requireNonNull(ImageIO.read(Files.newInputStream(Path.of(file))));
+                    else
+                        read = fetchIllustration(Pixiv.getInstance(), file);
+                } catch (Exception ignored) {
+                    read = null;
                 }
-                BufferedImage image = ImageUtils.centerFill(read, getWidth(), getHeight());
+                if (read == null) return null;
+                BufferedImage image = ImageUtils.downScale(read, getWidth(), getHeight());
                 read.flush();
                 return image;
             }

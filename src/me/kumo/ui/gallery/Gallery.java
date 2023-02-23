@@ -5,48 +5,58 @@ import com.github.weisj.darklaf.components.OverlayScrollPane;
 import me.kumo.io.LocalGallery;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.utils.Formatters;
+import me.kumo.ui.utils.SmoothScroll;
+import me.kumo.ui.utils.StartAndStoppable;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
-public class Gallery extends OverlayScrollPane implements ComponentListener, Refreshable<List<Illustration>>, Iterable<GalleryItem>, MouseWheelListener, ActionListener, AdjustmentListener {
+public class Gallery extends OverlayScrollPane implements Refreshable<List<Illustration>>, Iterable<GalleryItem>, ActionListener, Supplier<JScrollBar>, StartAndStoppable {
     public final JPanel grid;
     protected final ConcurrentHashMap<Long, GalleryItem> holderMap = new ConcurrentHashMap<>();
     private final Stack<GalleryItem> usedPool = new Stack<>();
+    private final Timer timer;
     protected int layoutItemCount;
     private int colCount;
     private SwingWorker<Object, Object> worker;
 
     private long last_frame_nanos = 0;
+    private final SmoothScroll smoothScroll;
 
     public Gallery() {
-        this(5);
-    }
-
-    public Gallery(int colCount) {
         super(null, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        this.colCount = colCount;
+        this.colCount = 5;
         this.grid = new JPanel();
-        new Timer(8, this).start();
-        getScrollPane().setViewportView(this.grid);
+
+        this.timer = new Timer(8, this);
         setPreferredSize(new Dimension(720, 480));
-        getScrollPane().setWheelScrollingEnabled(false);
-        getScrollPane().addMouseWheelListener(this);
-        getSmoothScrollbar().addAdjustmentListener(this);
-        addComponentListener(this);
+        getScrollPane().setViewportView(this.grid);
+        smoothScroll = new SmoothScroll(getScrollPane(), this);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                if (Gallery.this.colCount != (Gallery.this.colCount = Math.min(e.getComponent().getWidth() / GalleryImage.GRID_SIZE, 7)))
+                    updateLayout(layoutItemCount);
+            }
+        });
     }
 
     protected long lastShownUpdate = 0;
 
-    protected void updateShownStatus() {
+    protected void updateShownParallax() {
         if ((System.nanoTime() - lastShownUpdate) / 1e9 < 0.032) return;
         lastShownUpdate = System.nanoTime();
         Rectangle visibleRect = getScrollPane().getViewport().getViewRect();
@@ -86,7 +96,7 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
                     }
                 }
                 grid.revalidate();
-                updateShownStatus();
+                updateShownParallax();
                 return null;
             }
         };
@@ -126,7 +136,7 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
                 System.out.println("gallery.doInBackground.validate(" + grid.getComponentCount() + ")");
                 grid.revalidate();
                 SwingUtilities.invokeLater(() -> {
-                    updateShownStatus();
+                    updateShownParallax();
                     getHorizontalScrollBar().setValue(hScroll);
                     getVerticalScrollBar().setValue(vScroll);
                 });
@@ -191,24 +201,6 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         grid.repaint();
     }
 
-    @Override
-    public void componentResized(ComponentEvent e) {
-        if (colCount != (colCount = Math.min(e.getComponent().getWidth() / GalleryImage.GRID_SIZE, 7)))
-            updateLayout(layoutItemCount);
-    }
-
-    @Override
-    public void componentMoved(ComponentEvent e) {
-    }
-
-    @Override
-    public void componentShown(ComponentEvent e) {
-    }
-
-    @Override
-    public void componentHidden(ComponentEvent e) {
-    }
-
     public void tapGallery() {
         LocalGallery.update();
         usedPool.forEach(GalleryItem::updateImage);
@@ -220,33 +212,23 @@ public class Gallery extends OverlayScrollPane implements ComponentListener, Ref
         return usedPool.stream().iterator();
     }
 
-    protected JScrollBar getSmoothScrollbar() {
-        return getVerticalScrollBar();
-    }
-
-    protected double scrollTarget = 0;
-    protected double scrollPosition = 0;
-
     @Override
     public void actionPerformed(ActionEvent e) {
         repaint();
-        scrollPosition = scrollPosition * 0.9 + scrollTarget * 0.1;
-        if (Math.round(scrollPosition) != getSmoothScrollbar().getValue()) {
-            getSmoothScrollbar().setValue((int) Math.round(scrollPosition));
-            updateShownStatus();
-        }
+        smoothScroll.update();
+        updateShownParallax();
     }
 
     @Override
-    public void mouseWheelMoved(MouseWheelEvent e) {
-        scrollTarget = Math.max(getSmoothScrollbar().getMinimum(), Math.min(getSmoothScrollbar().getMaximum() - getSmoothScrollbar().getVisibleAmount(), scrollTarget + e.getPreciseWheelRotation() * 100));
+    public JScrollBar get() {
+        return getVerticalScrollBar();
     }
 
-    @Override
-    public void adjustmentValueChanged(AdjustmentEvent e) {
-        if (e.getValueIsAdjusting()) {
-            if (scrollPosition != (scrollPosition = e.getValue())) updateShownStatus();
-            scrollTarget = scrollPosition;
-        }
+    public void start() {
+        timer.start();
+    }
+
+    public void stop() {
+        timer.stop();
     }
 }

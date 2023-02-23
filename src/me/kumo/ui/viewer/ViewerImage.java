@@ -2,13 +2,17 @@ package me.kumo.ui.viewer;
 
 import me.kumo.io.ImageUtils;
 import me.kumo.io.LocalGallery;
+import me.kumo.io.ProgressInputStream;
+import me.kumo.io.ProgressTracker;
 import me.kumo.io.pixiv.Pixiv;
 import me.kumo.ui.gallery.GalleryImage;
+import me.kumo.ui.utils.Formatters;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,7 +28,7 @@ import java.util.concurrent.CancellationException;
 
 import static me.kumo.io.NetIO.fetchIllustration;
 
-public class ViewerImage extends JComponent {
+public class ViewerImage extends JComponent implements ProgressTracker.ProgressListener {
     public static final BasicStroke ROUND_STROKE = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     private static final File CACHE = new File("cache.big");
 
@@ -38,6 +42,10 @@ public class ViewerImage extends JComponent {
     private GalleryImage.SrcType type;
     private File cacheFile;
     private SwingWorker<Boolean, File> cacheWorker;
+    private long progress;
+    private long total;
+    private boolean done;
+    private double eta, speed;
 
     public ViewerImage(String url) {
         String name = url.substring(url.lastIndexOf('/') + 1);
@@ -91,11 +99,19 @@ public class ViewerImage extends JComponent {
             int h = (int) (image.getHeight() * ratio);
             g2d.drawImage(image, -(w - getWidth()) / 2, -(h - getHeight()) / 2, w, h, null);
         }
+        if (worker != null && !worker.isDone()) {
+            double v = this.progress * 1.0 / this.total;
+            g2d.setColor(Color.BLACK);
+            g2d.setXORMode(Color.WHITE);
+            g2d.fill(new Rectangle2D.Double((1 - v) * getWidth() / 2, (1 - v) * getHeight() / 2, v * getWidth(), v * getHeight()));
+            g2d.drawString(Formatters.formatBytes((long) speed) + "/s", getWidth() / 2, getHeight() / 2);
+            g2d.drawString("%.3fs left".formatted(eta), getWidth() / 2, getHeight() / 2 + 20);
+        }
     }
 
     private void loadImage() {
         if (this.file == null || image != null) return;
-        if (worker != null) worker.cancel(true);
+        if (worker != null && !worker.isDone()) return;
         worker = new SwingWorker<>() {
             @Override
             protected BufferedImage doInBackground() throws Exception {
@@ -103,7 +119,7 @@ public class ViewerImage extends JComponent {
                     if (Files.size(cacheFile.toPath()) != 0) return ImageIO.read(new FileInputStream(cacheFile));
                 } catch (Exception ignored) {
                 }
-                return type == GalleryImage.SrcType.LOCAL ? ImageIO.read(Files.newInputStream(Path.of(file))) : fetchIllustration(Pixiv.getInstance(), file);
+                return type == GalleryImage.SrcType.LOCAL ? ImageIO.read(Files.newInputStream(Path.of(file))) : fetchIllustration(Pixiv.getInstance(), file, ViewerImage.this);
             }
 
             @Override
@@ -141,5 +157,14 @@ public class ViewerImage extends JComponent {
             }
         };
         cacheWorker.execute();
+    }
+
+    @Override
+    public void update(ProgressTracker tracker) {
+        this.progress = tracker.getProgress();
+        this.total = tracker.getTotal();
+        this.done = tracker.isDone();
+        this.eta = tracker.getEta();
+        this.speed = tracker.getSpeed();
     }
 }

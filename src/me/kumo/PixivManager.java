@@ -1,7 +1,6 @@
 package me.kumo;
 
 import com.github.weisj.darklaf.LafManager;
-import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
 import me.kumo.io.pixiv.Pixiv;
 import me.kumo.ui.MainControl;
@@ -20,6 +19,7 @@ public class PixivManager extends JFrame implements WindowFocusListener {
         Pixiv pixiv = new Pixiv(System.getenv("PIXIV_TOKEN"));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setContentPane(controls = new MainControl(pixiv));
+        setJMenuBar(new PixivMenu());
         addWindowFocusListener(controls);
         pack();
         setLocationRelativeTo(null);

@@ -9,6 +9,7 @@ import me.kumo.io.pixiv.V2Filter;
 import me.kumo.ui.gallery.GalleryItem;
 import me.kumo.ui.gallery.HorizontalGallery;
 import me.kumo.ui.gallery.RankedItem;
+import me.kumo.ui.utils.SmoothScroll;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 public class FeedManager extends GalleryManager {
     private final Pixiv pixiv;
 
-    private final ArrayList<Illustration> follow;
     private final ArrayList<Illustration> rank;
     private final HorizontalGallery rankGallery;
     private String followNextURL = null;
@@ -28,7 +28,6 @@ public class FeedManager extends GalleryManager {
     public FeedManager(Pixiv pixiv) {
         this.pixiv = pixiv;
         rank = new ArrayList<>();
-        follow = new ArrayList<>();
         gallery.getScrollPane().getVerticalScrollBar().addAdjustmentListener(e -> {
             JScrollBar scrollBar = (JScrollBar) e.getAdjustable();
             int extent = scrollBar.getModel().getExtent();
@@ -42,6 +41,11 @@ public class FeedManager extends GalleryManager {
             getMoreRank();
         }));
         add(rankGallery = new HorizontalGallery() {
+            @Override
+            public JScrollBar get() {
+                return getHorizontalScrollBar();
+            }
+
             public GalleryItem getRefreshOrCreate(Illustration illustration) {
                 GalleryItem holder = holderMap.computeIfAbsent(illustration.getId(), i -> new RankedItem());
                 holder.refresh(illustration);
@@ -61,7 +65,6 @@ public class FeedManager extends GalleryManager {
                     SearchedIllusts illusts = followNextURL == null ? pixiv.follow(new V2Filter()) :
                             pixiv.requestSender.send(pixiv.createApiReqBuilder().url(followNextURL).get().build(), SearchedIllusts.class);
                     followNextURL = illusts.getNextUrl();
-                    follow.addAll(illusts.getIllusts());
                     append(illusts.getIllusts());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -96,5 +99,17 @@ public class FeedManager extends GalleryManager {
     public void refresh(Illustration illustration) {
         super.refresh(illustration);
         rankGallery.refresh(illustration);
+    }
+
+    @Override
+    public void start() {
+        gallery.start();
+        rankGallery.start();
+    }
+
+    @Override
+    public void stop() {
+        gallery.stop();
+        rankGallery.stop();
     }
 }

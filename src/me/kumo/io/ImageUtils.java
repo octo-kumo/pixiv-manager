@@ -3,6 +3,7 @@ package me.kumo.io;
 import org.imgscalr.Scalr;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Map;
 
@@ -32,21 +33,21 @@ public class ImageUtils {
         return n;
     }
 
-//    public static BufferedImage centerFill(BufferedImage image, int width, int height) {
-//        BufferedImage n = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
-//        Graphics2D g = n.createGraphics();
-//        double ratio = Math.max(1. * width / image.getWidth(), 1. * height / image.getHeight());
-//
-//        double w = image.getWidth() * ratio;
-//        double h = image.getHeight() * ratio;
-//        g.setPaint(new TexturePaint(image, new Rectangle2D.Double(width / 2d - w / 2, height / 2d - h / 2, w, h)));
-//        g.fillRect(0, 0, image.getWidth(), image.getHeight());
-//        g.dispose();
-//        image.flush();
-//        return n;
-//    }
-
     public static BufferedImage centerFill(BufferedImage image, int width, int height) {
+        BufferedImage n = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
+        Graphics2D g = n.createGraphics();
+        double ratio = Math.max(1. * width / image.getWidth(), 1. * height / image.getHeight());
+
+        double w = image.getWidth() * ratio;
+        double h = image.getHeight() * ratio;
+        g.setPaint(new TexturePaint(image, new Rectangle2D.Double(width / 2d - w / 2, height / 2d - h / 2, w, h)));
+        g.fillRect(0, 0, image.getWidth(), image.getHeight());
+        g.dispose();
+        image.flush();
+        return n;
+    }
+
+    public static BufferedImage downScale(BufferedImage image, int width, int height) {
         double ratio = Math.max(1. * width / image.getWidth(), 1. * height / image.getHeight());
         return Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.AUTOMATIC,
                 (int) (image.getWidth() * ratio),

@@ -150,8 +150,8 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         private SwingWorker<Boolean, Object> downloadWorker;
 
         private boolean done;
-        private long contentLength;
-        private long bytesRead;
+        private long total;
+        private long progress;
 
         public ItemToolbar() {
             super();
@@ -210,10 +210,10 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                     refreshProgress.setVisible(true);
                     refreshProgress.setRunning(true);
                     refresh.setVisible(false);
-                    return downloadIllustration(Pixiv.getInstance(), illustration, (bytesRead, contentLength, done) -> {
-                        ItemToolbar.this.bytesRead = bytesRead;
-                        ItemToolbar.this.contentLength = contentLength;
-                        ItemToolbar.this.done = done;
+                    return downloadIllustration(Pixiv.getInstance(), illustration, (tracker) -> {
+                        progress = tracker.getProgress();
+                        total = tracker.getTotal();
+                        done = tracker.isDone();
                     });
                 }
 
@@ -251,9 +251,9 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                 g.setColor(Color.BLACK);
                 g.fillRect(0, 0, getWidth(), 12);
                 g.setColor(done ? Color.GREEN : Color.WHITE);
-                g.fillRect(0, 0, (int) (getWidth() * (1d * bytesRead / contentLength)), 12);
+                g.fillRect(0, 0, (int) (getWidth() * (1d * progress / total)), 12);
                 g.setXORMode(Color.BLACK);
-                g.drawString(Formatters.formatBytes(bytesRead) + "/" + Formatters.formatBytes(contentLength), 5, 10);
+                g.drawString(Formatters.formatBytes(progress) + "/" + Formatters.formatBytes(total), 5, 10);
             }
         }
     }

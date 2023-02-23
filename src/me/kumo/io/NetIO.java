@@ -7,6 +7,7 @@ import me.kumo.ui.utils.FileTransferable;
 import okhttp3.Response;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.FileImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -20,24 +21,61 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 public class NetIO {
-    private static final String PATH = "/Users/zy/Documents/Pictures2022";
     private static final HashSet<Long> downloading = new HashSet<>();
+    private static final File CACHE = new File("cache");
+
+    static {
+        if (!CACHE.exists()) CACHE.mkdir();
+    }
 
     public static int tasks() {
         return downloading.size();
     }
 
+    public static BufferedImage fetchIllustrationCached(Pixiv pixiv, String url) throws PixivException, IOException {
+        String extension = url.substring(url.lastIndexOf('.'));
+        File cache = new File(CACHE, url.hashCode() + extension);
+        try {
+            if (cache.exists()) return ImageIO.read(cache);
+        } catch (Exception ignored) {
+        }
+        BufferedImage image = fetchIllustration(pixiv, url);
+        if (image == null) return null;
+        try (FileImageOutputStream fw = new FileImageOutputStream(cache)) {
+            ImageIO.write(image, extension.substring(1), fw);
+            fw.flush();
+        }
+        return image;
+    }
+
+
     public static BufferedImage fetchIllustration(Pixiv pixiv, String url) throws PixivException, IOException {
         Response download = pixiv.download(url);
         if (download.isSuccessful() && download.body() != null) {
-            BufferedImage read = ImageIO.read(download.body().byteStream());
+            InputStream input = download.body().byteStream();
+            BufferedImage read = ImageIO.read(input);
             download.close();
             return read;
         }
         return null;
     }
 
-    public static boolean downloadIllustration(Pixiv pixiv, Illustration illustration, ProgressListener listener) {
+    public static BufferedImage fetchIllustration(Pixiv pixiv, String url, ProgressTracker.ProgressListener listener) throws PixivException, IOException {
+        Response download = pixiv.download(url);
+        if (download.isSuccessful() && download.body() != null) {
+            long targetSize = download.body().contentLength();
+            BufferedImage read;
+            try (InputStream input = download.body().byteStream();
+                 ProgressInputStream imageInputStream = new ProgressInputStream(input, targetSize)) {
+                imageInputStream.getTracker().addProgressListener(listener);
+                read = ImageIO.read(imageInputStream);
+            }
+            return read;
+        }
+        return null;
+    }
+
+    public static boolean downloadIllustration(Pixiv pixiv, Illustration illustration, ProgressTracker.ProgressListener listener) {
         try {
             if (downloading.contains(illustration.getId())) return false;
             downloading.add(illustration.getId());
@@ -45,7 +83,7 @@ public class NetIO {
                     .filter(Objects::nonNull).forEach(url -> {
                         String filename = url.substring(url.lastIndexOf('/') + 1);
 //                        System.out.println("downloading ... " + filename);
-                        File target = new File(PATH, filename);
+                        File target = new File(LocalGallery.PATH, filename);
                         if (target.exists()) {
                             System.out.println("File Exists! " + target.getName());
                             return;
@@ -53,18 +91,12 @@ public class NetIO {
                         try {
                             Response response = pixiv.download(url);
                             if (response.isSuccessful() && response.body() != null) {
+                                long targetSize = response.body().contentLength();
                                 try (InputStream in = response.body().byteStream();
+                                     ProgressInputStream in2 = new ProgressInputStream(in, targetSize);
                                      FileOutputStream fw = new FileOutputStream(target)) {
-                                    long targetSize = response.body().contentLength(), downloaded = 0;
-                                    byte[] buffer = new byte[1024 * 16];
-                                    int len;
-                                    while ((len = in.read(buffer)) != -1) {
-                                        fw.write(buffer, 0, len);
-                                        downloaded += len;
-                                        listener.update(downloaded, targetSize, false);
-                                    }
-                                    fw.flush();
-                                    listener.update(downloaded, targetSize, downloaded == targetSize);
+                                    in2.getTracker().addProgressListener(listener);
+                                    in2.transferTo(fw);
                                 }
                             }
                         } catch (PixivException | IOException e) {
@@ -80,9 +112,6 @@ public class NetIO {
         }
     }
 
-    public interface ProgressListener {
-        void update(long bytesRead, long contentLength, boolean done);
-    }
 
     public static void open(URI uri) {
         try {

@@ -29,8 +29,9 @@ public class IllustrationViewer extends JPanel {
             add(center = new ViewerImage(illustration.getMetaSinglePage().getOriginalImageUrl()), BorderLayout.CENTER);
         }
         center.setPreferredSize(size);
-        add(new BigIllustrationInfo(illustration), BorderLayout.EAST);
 
+        add(new BigIllustrationInfo(illustration), BorderLayout.EAST);
+        add(new Comments(illustration), BorderLayout.WEST);
         timer = new Timer(16, e -> repaint());
     }
 
