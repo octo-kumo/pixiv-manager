@@ -1,4 +1,4 @@
-package me.kumo.ui;
+package me.kumo.ui.managers;
 
 import me.kumo.io.LocalGallery;
 import me.kumo.io.img.CorruptDetector;

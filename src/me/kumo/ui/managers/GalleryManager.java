@@ -1,6 +1,7 @@
-package me.kumo.ui;
+package me.kumo.ui.managers;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
+import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.ControlPane;
 import me.kumo.ui.gallery.Gallery;
 import me.kumo.ui.utils.StartAndStoppable;

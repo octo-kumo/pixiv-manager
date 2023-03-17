@@ -32,13 +32,19 @@ public class CommentListRenderer implements ListCellRenderer<Comment> {
             }});
             author.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(author);
-            JLabel content = new JLabel();
+            JEditorPane content = new JEditorPane();
+            content.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+            content.setFont(new Font(null, Font.PLAIN, 12));
+            content.setAlignmentX(LEFT_ALIGNMENT);
+            content.setContentType("text/html");
+            content.setEditable(false);
             content.setText("<html>" + value.getComment() + "</html>");
-            content.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+            content.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.setMaximumSize(new Dimension(200, Short.MAX_VALUE));
             add(content);
 
-            new SwingWorker<>() {
+            SwingUtilities.invokeLater(() -> new SwingWorker<>() {
                 @Override
                 protected Object doInBackground() throws PixivException, IOException {
                     BufferedImage image = NetIO.fetchIllustrationCached(Pixiv.getInstance(), value.getUser().getProfileImageUrls().getMedium());
@@ -50,7 +56,7 @@ public class CommentListRenderer implements ListCellRenderer<Comment> {
                     authorName.updateUI();
                     return null;
                 }
-            }.execute();
+            }.execute());
         }
 
         @Override
@@ -65,4 +71,6 @@ public class CommentListRenderer implements ListCellRenderer<Comment> {
 
         }
     }
+
+    ;
 }

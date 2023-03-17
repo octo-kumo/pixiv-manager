@@ -1,4 +1,4 @@
-package me.kumo.ui;
+package me.kumo.ui.managers;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.hanshsieh.pixivj.model.RankedIllusts;
@@ -9,7 +9,6 @@ import me.kumo.io.pixiv.V2Filter;
 import me.kumo.ui.gallery.GalleryItem;
 import me.kumo.ui.gallery.HorizontalGallery;
 import me.kumo.ui.gallery.RankedItem;
-import me.kumo.ui.utils.SmoothScroll;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +41,7 @@ public class FeedManager extends GalleryManager {
         }));
         add(rankGallery = new HorizontalGallery() {
             @Override
-            public JScrollBar get() {
+            public JScrollBar getSmoothScrollbar() {
                 return getHorizontalScrollBar();
             }
 
@@ -54,6 +53,12 @@ public class FeedManager extends GalleryManager {
                 return holder;
             }
         }, BorderLayout.SOUTH);
+        rankGallery.getScrollPane().getHorizontalScrollBar().addAdjustmentListener(e -> {
+            JScrollBar scrollBar = (JScrollBar) e.getAdjustable();
+            int extent = scrollBar.getModel().getExtent();
+            if (scrollBar.getValue() != 0 && (scrollBar.getValue() + extent) == scrollBar.getMaximum())
+                getMoreRank();
+        });
     }
 
     private void getMoreFollows() {

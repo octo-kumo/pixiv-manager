@@ -16,9 +16,8 @@ import java.util.concurrent.ExecutionException;
 
 public class Comments extends OverlayScrollPane {
     private final DefaultListModel<Comment> comments;
-    private final JList<Comment> list;
     private final SmoothScroll smoothScroll;
-    private IllustCommentsFilter filter;
+    private final IllustCommentsFilter filter;
     private SwingWorker<Object, Object> worker;
 
     public Comments(Illustration illustration) {
@@ -27,15 +26,15 @@ public class Comments extends OverlayScrollPane {
                 DarkBorders.createLineBorder(1, 1, 1, 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         setPreferredSize(new Dimension(200, 0));
-        comments = new DefaultListModel<Comment>();
+        comments = new DefaultListModel<>();
         filter = new IllustCommentsFilter();
         filter.setIllustId(illustration.getId());
 
-        list = new JList<>(comments);
+        JList<Comment> list = new JList<>(comments);
         list.setCellRenderer(new CommentListRenderer());
         getScrollPane().setViewportView(list);
 
-        smoothScroll = new SmoothScroll(this.getScrollPane(), this::getVerticalScrollBar, 0.4);
+        smoothScroll = new SmoothScroll(this.getScrollPane(), getVerticalScrollBar(), 0.4);
         getScrollPane().getVerticalScrollBar().addAdjustmentListener(e -> {
             JScrollBar scrollBar = (JScrollBar) e.getAdjustable();
             int extent = scrollBar.getModel().getExtent();
@@ -47,13 +46,11 @@ public class Comments extends OverlayScrollPane {
 
     public void getMoreComments() {
         if (worker != null && !worker.isDone()) return;
-        System.out.println("getMoreComments");
         worker = new SwingWorker<>() {
             @Override
             protected Object doInBackground() throws Exception {
                 com.github.hanshsieh.pixivj.model.Comments illustComments = Pixiv.getInstance().getIllustComments(filter);
                 List<Comment> newComments = illustComments.getComments();
-                System.out.println(newComments);
                 newComments.sort(Comparator.comparing(Comment::getDate, Comparator.reverseOrder()));
                 filter.setIllustId(newComments.get(newComments.size() - 1).getId());
                 comments.addAll(newComments);

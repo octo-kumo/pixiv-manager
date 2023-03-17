@@ -3,12 +3,16 @@ package me.kumo.ui.gallery;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import me.kumo.io.LocalGallery;
+import me.kumo.io.pixiv.Pixiv;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.utils.Formatters;
 import me.kumo.ui.utils.SmoothScroll;
 import me.kumo.ui.utils.StartAndStoppable;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.HardwareAbstractionLayer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,9 +25,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
-public class Gallery extends OverlayScrollPane implements Refreshable<List<Illustration>>, Iterable<GalleryItem>, ActionListener, Supplier<JScrollBar>, StartAndStoppable {
+public class Gallery extends OverlayScrollPane implements Refreshable<List<Illustration>>, Iterable<GalleryItem>, ActionListener, StartAndStoppable {
     public final JPanel grid;
     protected final ConcurrentHashMap<Long, GalleryItem> holderMap = new ConcurrentHashMap<>();
     private final Stack<GalleryItem> usedPool = new Stack<>();
@@ -35,6 +38,10 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     private long last_frame_nanos = 0;
     private final SmoothScroll smoothScroll;
 
+    private static final SystemInfo SI = new SystemInfo();
+    private static final HardwareAbstractionLayer HAL = SI.getHardware();
+    private static final CentralProcessor CPU = HAL.getProcessor();
+
     public Gallery() {
         super(null, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         this.colCount = 5;
@@ -43,7 +50,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
         this.timer = new Timer(8, this);
         setPreferredSize(new Dimension(720, 480));
         getScrollPane().setViewportView(this.grid);
-        smoothScroll = new SmoothScroll(getScrollPane(), this);
+        smoothScroll = new SmoothScroll(getScrollPane(), getSmoothScrollbar());
 
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -72,8 +79,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     }
 
     public void refresh(Illustration illustration) {
-        usedPool.stream().filter(p -> Objects.equals(p.getIllustration().getId(), illustration.getId()))
-                .forEach(i -> i.refresh(illustration));
+        usedPool.stream().filter(p -> Objects.equals(p.getIllustration().getId(), illustration.getId())).forEach(i -> i.refresh(illustration));
     }
 
     public void append(List<Illustration> illustrations) {
@@ -160,7 +166,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     }
 
     private void drawDebug(Graphics g) {
-        int lines = 6;
+        int lines = 7;
         int LINE_HEIGHT = g.getFontMetrics().getHeight();
         int x = getWidth() - 200, y = getHeight() - LINE_HEIGHT * lines;
 
@@ -178,6 +184,8 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
         g.setXORMode(Color.BLACK);
         g.drawString(String.format("OS:   %s (%s)", System.getProperty("os.name"), System.getProperty("os.version")), x, y += LINE_HEIGHT);
         g.drawString(String.format("ARCH: %s (%d cores)", System.getProperty("os.arch"), runtime.availableProcessors()), x, y += LINE_HEIGHT);
+
+        g.drawString("CONS: %d / %d".formatted(Pixiv.getInstance().connections(), Pixiv.getInstance().idleConnections()), x, y += LINE_HEIGHT);
 
         long usedMem = runtime.totalMemory() - runtime.freeMemory();
         g.fillRect(x + barPad, y + LINE_HEIGHT / 4, (int) (barWidth * runtime.totalMemory() / runtime.maxMemory()), LINE_HEIGHT);
@@ -219,8 +227,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
         updateShownParallax();
     }
 
-    @Override
-    public JScrollBar get() {
+    public JScrollBar getSmoothScrollbar() {
         return getVerticalScrollBar();
     }
 

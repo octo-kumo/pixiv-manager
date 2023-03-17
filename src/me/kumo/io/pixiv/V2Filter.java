@@ -8,7 +8,7 @@ public class V2Filter {
     //https://www.pixiv.net/ajax/user/43169692/illusts/bookmarks?tag=&offset=0&limit=48&rest=show&lang=en
 
     @SerializedName("user_id")
-    private String userID;
+    private Long userID;
     @SerializedName("offset")
     private Integer offset;
     @SerializedName("limit")
@@ -21,7 +21,7 @@ public class V2Filter {
     public V2Filter() {
     }
 
-    public V2Filter(String userId) {
+    public V2Filter(Long userId) {
         setUserID(userId);
     }
 
@@ -31,11 +31,11 @@ public class V2Filter {
                 .fromQueryParams(url, V2Filter.class);
     }
 
-    public String getUserID() {
+    public Long getUserID() {
         return userID;
     }
 
-    public void setUserID(String userID) {
+    public void setUserID(Long userID) {
         this.userID = userID;
     }
 

@@ -5,7 +5,6 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.util.function.Supplier;
 
 public class SmoothScroll implements MouseWheelListener, AdjustmentListener {
 
@@ -15,14 +14,14 @@ public class SmoothScroll implements MouseWheelListener, AdjustmentListener {
     protected double scrollTarget = 0;
     protected double scrollPosition = 0;
 
-    public SmoothScroll(JScrollPane scrollPane, Supplier<JScrollBar> supplier) {
-        this(scrollPane, supplier, 0.1);
+    public SmoothScroll(JScrollPane scrollPane, JScrollBar bar) {
+        this(scrollPane, bar, 0.1);
     }
 
 
-    public SmoothScroll(JScrollPane scrollPane, Supplier<JScrollBar> supplier, double lambda) {
-        bar = supplier.get();
+    public SmoothScroll(JScrollPane scrollPane, JScrollBar bar, double lambda) {
         this.lambda = lambda;
+        this.bar = bar;
         bar.addAdjustmentListener(this);
         scrollPane.setWheelScrollingEnabled(false);
         scrollPane.addMouseWheelListener(this);
@@ -35,7 +34,7 @@ public class SmoothScroll implements MouseWheelListener, AdjustmentListener {
 
     @Override
     public void adjustmentValueChanged(AdjustmentEvent e) {
-        if (e.getValueIsAdjusting()) scrollTarget = scrollPosition;
+        if (e.getValueIsAdjusting()) scrollTarget = scrollPosition = e.getValue();
     }
 
     public void update() {

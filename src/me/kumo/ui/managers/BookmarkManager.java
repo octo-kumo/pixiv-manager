@@ -1,4 +1,4 @@
-package me.kumo.ui;
+package me.kumo.ui.managers;
 
 import com.github.hanshsieh.pixivj.exception.APIException;
 import com.github.hanshsieh.pixivj.exception.PixivException;

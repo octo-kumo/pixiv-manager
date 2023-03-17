@@ -18,7 +18,7 @@ public class HorizontalGallery extends Gallery {
         grid.repaint();
     }
 
-    protected JScrollBar getSmoothScrollbar() {
+    public JScrollBar getSmoothScrollbar() {
         return getHorizontalScrollBar();
     }
 }

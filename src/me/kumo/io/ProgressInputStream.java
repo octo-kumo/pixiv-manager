@@ -17,7 +17,7 @@ public class ProgressInputStream extends InputStream {
 
     public ProgressInputStream(InputStream inputStream, long length) {
         this.in = inputStream;
-        this.tracker = new ProgressTracker(64, length);
+        this.tracker = new ProgressTracker(32, length);
     }
 
 
@@ -54,4 +54,24 @@ public class ProgressInputStream extends InputStream {
         if (readCount != -1) tracker.update(readCount);
         else tracker.setDone(true);
     }
+
+//    public int available() throws IOException {
+//        return in.available();
+//    }
+//
+//    public void close() throws IOException {
+//        in.close();
+//    }
+//
+//    public synchronized void mark(int readlimit) {
+//        in.mark(readlimit);
+//    }
+//
+//    public synchronized void reset() throws IOException {
+//        in.reset();
+//    }
+//
+//    public boolean markSupported() {
+//        return in.markSupported();
+//    }
 }

@@ -30,6 +30,7 @@ sourceSets {
     }
 }
 dependencies {
+    implementation('com.github.oshi:oshi-core:6.4.0')
     implementation('me.tongfei:progressbar:0.9.4')
     implementation('org.swinglabs.swingx:swingx-all:1.6.4')
     implementation('org.imgscalr:imgscalr-lib:4.2')
@@ -37,5 +38,6 @@ dependencies {
     implementation('org.jetbrains:annotations:23.0.0')
     implementation('com.github.weisj:darklaf-core:3.0.2')
     implementation('com.google.code.gson:gson:2.8.9')
+//    implementation('com.miglayout:miglayout:3.7.4')
     testImplementation('org.junit.jupiter:junit-jupiter:5.7.1')
 }

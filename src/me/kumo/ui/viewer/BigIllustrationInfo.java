@@ -5,6 +5,7 @@ import com.github.hanshsieh.pixivj.model.Tag;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.components.border.DarkBorders;
 import me.kumo.io.NetIO;
+import me.kumo.ui.artist.ArtistManager;
 import me.kumo.ui.utils.WrapLayout;
 import org.jdesktop.swingx.hyperlink.HyperlinkAction;
 import org.jdesktop.swingx.plaf.basic.core.BasicTransferable;
@@ -40,15 +41,13 @@ public class BigIllustrationInfo extends JPanel {
             action.setName("<html>" + illustration.getTitle() + "</html>");
             setAction(action);
         }});
-        add(new JButton() {{
+        add(new JButton(illustration.getUser().getName() + (illustration.getUser().isFollowed() ? " \u2713" : "")) {{
             setAlignmentX(LEFT_ALIGNMENT);
             setBorderPainted(false);
             setOpaque(false);
             setHorizontalAlignment(LEADING);
             setBackground(null);
-            HyperlinkAction action = HyperlinkAction.createHyperlinkAction(URI.create("https://www.pixiv.net/users/" + illustration.getUser().getId()));
-            action.setName(illustration.getUser().getName() + (illustration.getUser().isFollowed() ? " \u2713" : ""));
-            setAction(action);
+            addActionListener(e -> ArtistManager.open(SwingUtilities.getWindowAncestor(this), illustration.getUser().getId()));
         }});
         add(new JLabel(illustration.getCreateDate().format(DateTimeFormatter.ofPattern("yyyy MMM dd hh:mm:ss a"))));
         add(new JSeparator() {{

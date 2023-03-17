@@ -9,10 +9,10 @@ public class ProgressTracker {
     private final MovingAvgLastN size;
     private final MovingAvgLastN time;
     private final MovingAvgLastN eta;
+    private final MovingAvgLastN speed;
     private final long total;
     private long lastEva;
     private long progress;
-    private double speed;
     private boolean done;
 
     private final EventListenerList list;
@@ -22,6 +22,7 @@ public class ProgressTracker {
         this.eta = new MovingAvgLastN(windowSize);
         this.size = new MovingAvgLastN(windowSize);
         this.time = new MovingAvgLastN(windowSize);
+        this.speed = new MovingAvgLastN(windowSize);
         this.list = new EventListenerList();
     }
 
@@ -31,9 +32,9 @@ public class ProgressTracker {
             double et = -(lastEva - (lastEva = System.nanoTime())) / 1e9;
             size.add(count);
             time.add(et);
-            speed = size.getAvg() / time.getAvg();
+            speed.add(size.getAvg() / time.getAvg());
             progress += count;
-            eta.add((total - progress) / speed);
+            eta.add((total - progress) / speed.getAvg());
         }
         fire();
     }
@@ -47,7 +48,7 @@ public class ProgressTracker {
     }
 
     public double getSpeed() {
-        return speed;
+        return speed.getAvg();
     }
 
     public double getEta() {

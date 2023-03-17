@@ -61,11 +61,6 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         controls.refresh(illustration);
     }
 
-    @Override
-    public void revalidate() {
-        super.revalidate();
-    }
-
     public boolean isShown() {
         return shown;
     }
@@ -75,9 +70,9 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         this.image.setShown(shown);
     }
 
-    public void setVisible(boolean aFlag) {
-        super.setVisible(aFlag);
-        if (!aFlag) image.unload();
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (!visible) image.unloadImage();
     }
 
     public void downloadIfNotExist() {
@@ -86,8 +81,8 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
     public void updateImage() {
         File file = LocalGallery.getImage(String.valueOf(illustration.getId()));
-        if (file != null) this.image.setFile(file.getAbsolutePath());
-        else this.image.setFile(illustration.getImageUrls().getLarge());
+        this.image.setUrl(illustration.getImageUrls().getMedium());
+        this.image.setLocalFile(file);
     }
 
     @Override
@@ -104,7 +99,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     public void mouseReleased(MouseEvent e) {
         image.setPressed(false);
         if (mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) < MOUSE_DRAG_TOLERANCE)
-            IllustrationViewer.show((Frame) SwingUtilities.getWindowAncestor(this), illustration);
+            IllustrationViewer.show((Frame) SwingUtilities.getWindowAncestor(this), illustration, image.getImage());
     }
 
     @Override
@@ -128,7 +123,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
             image.setPressed(false);
             JComponent c = (JComponent) e.getSource();
             TransferHandler handler = c.getTransferHandler();
-            handler.setDragImage(image.scaledCopy);
+            handler.setDragImage(image.getImage());
             handler.exportAsDrag(c, mouseDownEvent, TransferHandler.COPY);
             mouseDownEvent = null;
         }

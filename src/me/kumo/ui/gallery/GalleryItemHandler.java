@@ -19,10 +19,8 @@ public class GalleryItemHandler extends TransferHandler {
     public Transferable createTransferable(JComponent c) {
         if (c instanceof GalleryItem) {
             if (((GalleryItem) c).image.downloaded()) {
-                System.out.println("lolol");
                 return new FileTransferable(List.of(LocalGallery.getImage(((GalleryItem) c).getIllustration().getId())));
             } else {
-                System.out.println("nonono");
                 return new StringSelection("https://pixiv.net/artworks/" + ((GalleryItem) c).getIllustration().getId());
             }
         }

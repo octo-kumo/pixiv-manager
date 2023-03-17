@@ -1,6 +1,6 @@
 package me.kumo;
 
-import me.kumo.ui.CorruptedManager;
+import me.kumo.ui.managers.CorruptedManager;
 
 import javax.swing.*;
 import java.awt.*;

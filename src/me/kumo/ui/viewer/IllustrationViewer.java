@@ -8,12 +8,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.util.List;
 
 public class IllustrationViewer extends JPanel {
     public final Timer timer;
 
-    public IllustrationViewer(Illustration illustration) {
+    public IllustrationViewer(JDialog dialog, Illustration illustration, BufferedImage thumb) {
         super(new BorderLayout());
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
         size.setSize(illustration.getWidth() * size.getHeight() * 0.7 / illustration.getHeight(), size.getHeight() * 0.7);
@@ -22,22 +23,28 @@ public class IllustrationViewer extends JPanel {
             add(center = new JTabbedPane() {{
                 List<MetaPage> metaPages = illustration.getMetaPages();
                 for (int i = 0; i < metaPages.size(); i++) {
-                    addTab(String.valueOf(i + 1), new ViewerImage(LocalGallery.getBestQuality(metaPages.get(i).getImageUrls())));
+                    addTab(String.valueOf(i + 1), new ViewerImage(LocalGallery.getBestQuality(metaPages.get(i).getImageUrls()), thumb));
                 }
             }}, BorderLayout.CENTER);
         } else {
-            add(center = new ViewerImage(illustration.getMetaSinglePage().getOriginalImageUrl()), BorderLayout.CENTER);
+            add(center = new ViewerImage(illustration.getMetaSinglePage().getOriginalImageUrl(), thumb), BorderLayout.CENTER);
         }
         center.setPreferredSize(size);
 
         add(new BigIllustrationInfo(illustration), BorderLayout.EAST);
         add(new Comments(illustration), BorderLayout.WEST);
+        dialog.setFocusTraversalPolicy(new DefaultFocusTraversalPolicy() {
+            @Override
+            public Component getDefaultComponent(Container aContainer) {
+                return center;
+            }
+        });
         timer = new Timer(16, e -> repaint());
     }
 
-    public static void show(Frame owner, Illustration illustration) {
+    public static void show(Frame owner, Illustration illustration, BufferedImage thumb) {
         JDialog dialog = new JDialog(owner, illustration.getTitle(), true);
-        IllustrationViewer viewer = new IllustrationViewer(illustration);
+        IllustrationViewer viewer = new IllustrationViewer(dialog, illustration, thumb);
         dialog.setContentPane(viewer);
         dialog.addWindowListener(new WindowAdapter() {
             public void windowOpened(WindowEvent e) {

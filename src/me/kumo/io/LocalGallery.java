@@ -34,6 +34,10 @@ public class LocalGallery {
         return Nullity.coalesce(urls.getOriginal(), urls.getLarge(), urls.getMedium());
     }
 
+    public static String getMidQuality(MetaPageImageUrls urls) {
+        return Nullity.coalesce(urls.getMedium(), urls.getLarge(), urls.getOriginal());
+    }
+
     public static class ImageFileFilter implements FilenameFilter {
         private final String[] okFileExtensions = new String[]{"jpg", "jpeg", "png", "gif"};
 
@@ -41,5 +45,14 @@ public class LocalGallery {
         public boolean accept(File dir, String name) {
             return Arrays.stream(okFileExtensions).anyMatch(extension -> name.toLowerCase().endsWith(extension));
         }
+    }
+
+    public static String getExtension(String name) {
+        return switch (name.substring(name.lastIndexOf('.') + 1).toLowerCase()) {
+            case "png" -> "png";
+            case "jpg", "jpeg" -> "jpg";
+            case "gif" -> "gif";
+            default -> throw new RuntimeException("Unknown extension: " + name);
+        };
     }
 }

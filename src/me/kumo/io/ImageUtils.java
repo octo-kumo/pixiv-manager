@@ -3,6 +3,7 @@ package me.kumo.io;
 import org.imgscalr.Scalr;
 
 import java.awt.*;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Map;
@@ -52,5 +53,15 @@ public class ImageUtils {
         return Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.AUTOMATIC,
                 (int) (image.getWidth() * ratio),
                 (int) (image.getHeight() * ratio));
+    }
+
+    public static final BasicStroke ROUND_STROKE = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+
+    public static void spinner(Graphics2D g, double x, double y, double r) {
+        double clock = (System.currentTimeMillis() % 1000) / 1000d;
+        Stroke stroke = g.getStroke();
+        g.setStroke(ROUND_STROKE);
+        g.draw(new Arc2D.Double(x, y, r * 2, r * 2, clock * 360, clock * 720 - 360, Arc2D.OPEN));
+        g.setStroke(stroke);
     }
 }
