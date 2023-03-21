@@ -37,6 +37,11 @@ public class ControlPane extends Box implements Refreshable<List<Illustration>> 
         advancedStuff.add(toolFilter = new ToolFilter(this));
         advancedStuff.add(sorters = new SortPane(this));
         advancedStuff.setVisible(false);
+        toolFilter.setVisible(false);
+    }
+
+    public void setToolsShown(boolean shown) {
+        toolFilter.setVisible(shown);
     }
 
     public void refresh(List<Illustration> illustrations) {

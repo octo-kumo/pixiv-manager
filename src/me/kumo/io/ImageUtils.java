@@ -64,4 +64,21 @@ public class ImageUtils {
         g.draw(new Arc2D.Double(x, y, r * 2, r * 2, clock * 360, clock * 720 - 360, Arc2D.OPEN));
         g.setStroke(stroke);
     }
+
+    public static double colorDifference(Color c1, Color c2) {
+        return Math.sqrt(Math.pow(c1.getRed() - c2.getRed(), 2) + Math.pow(c1.getGreen() - c2.getGreen(), 2) + Math.pow(c1.getBlue() - c2.getBlue(), 2));
+    }
+
+    public static double minColorDifference(Color c1, Color[] colors) {
+        boolean seen = false;
+        Double best = null;
+        for (Color c : colors) {
+            Double colorDifference = colorDifference(c1, c);
+            if (!seen || colorDifference.compareTo(best) < 0) {
+                seen = true;
+                best = colorDifference;
+            }
+        }
+        return seen ? best : Double.MAX_VALUE;
+    }
 }

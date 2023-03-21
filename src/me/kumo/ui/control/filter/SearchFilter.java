@@ -42,6 +42,10 @@ public class SearchFilter extends Box implements IllustrationFilter, ActionListe
             addActionListener(SearchFilter.this);
         }});
         add(Box.createHorizontalGlue());
+
+        add(new JCheckBox("Tools", false) {{
+            addActionListener(e -> controlPane.setToolsShown(isSelected()));
+        }});
         add(new IconButton(Icons.down.get(), e -> {
             controlPane.setAdvancedControls(!controlPane.isAdvancedControls());
             ((IconButton) e.getSource()).setIcon(controlPane.isAdvancedControls() ? Icons.up.get() : Icons.down.get());

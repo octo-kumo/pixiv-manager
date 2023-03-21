@@ -5,6 +5,7 @@ import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
 import com.github.weisj.darklaf.components.tristate.TristateState;
 import me.kumo.io.LocalGallery;
 import me.kumo.ui.control.ControlPane;
+import me.kumo.ui.utils.WrapLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,12 +19,13 @@ public class OptionFilter extends JPanel implements ActionListener, Illustration
     private final ArrayList<ToggleOption> options;
 
     public OptionFilter(ControlPane controlPane) {
-        super(new FlowLayout(FlowLayout.LEADING));
+        super(new WrapLayout(FlowLayout.LEADING));
         this.controlPane = controlPane;
         options = new ArrayList<>();
         options.add(new ToggleOption("R-18", i -> i.getXRestrict() != 0, this));
         options.add(new ToggleOption("AI", Illustration::isAI, this));
         options.add(new ToggleOption("Bookmarked", Illustration::isBookmarked, this));
+        options.add(new ToggleOption("Landscape", i -> i.getWidth() > i.getHeight(), this));
         options.add(new ToggleOption("Visible", Illustration::isVisible, this));
         options.add(new ToggleOption("Restricted", i -> i.getRestrict() != 0, this));
         options.add(new ToggleOption("Missing", i -> LocalGallery.getImage(i.getId()) == null, this));

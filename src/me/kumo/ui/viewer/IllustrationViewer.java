@@ -1,15 +1,12 @@
 package me.kumo.ui.viewer;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.MetaPage;
-import me.kumo.io.LocalGallery;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.util.List;
 
 public class IllustrationViewer extends JPanel {
     public final Timer timer;
@@ -21,13 +18,11 @@ public class IllustrationViewer extends JPanel {
         JComponent center;
         if (illustration.getPageCount() > 1) {
             add(center = new JTabbedPane() {{
-                List<MetaPage> metaPages = illustration.getMetaPages();
-                for (int i = 0; i < metaPages.size(); i++) {
-                    addTab(String.valueOf(i + 1), new ViewerImage(LocalGallery.getBestQuality(metaPages.get(i).getImageUrls()), thumb));
-                }
+                for (int i = 0; i < illustration.getMetaPages().size(); i++)
+                    addTab(String.valueOf(i + 1), new ViewerImage(illustration, i, thumb));
             }}, BorderLayout.CENTER);
         } else {
-            add(center = new ViewerImage(illustration.getMetaSinglePage().getOriginalImageUrl(), thumb), BorderLayout.CENTER);
+            add(center = new ViewerImage(illustration, 0, thumb), BorderLayout.CENTER);
         }
         center.setPreferredSize(size);
 

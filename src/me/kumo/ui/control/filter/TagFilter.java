@@ -6,6 +6,7 @@ import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.ControlPane;
+import me.kumo.ui.utils.WrapLayout;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import javax.swing.*;
@@ -34,7 +35,7 @@ public class TagFilter extends JPanel implements IllustrationFilter, Refreshable
             setEditable(true);
             setSelectedIndex(-1);
         }}, BorderLayout.WEST);
-        add(new OverlayScrollPane(filtersPanel = new JPanel(new FlowLayout(FlowLayout.LEADING)), JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
+        add(new OverlayScrollPane(filtersPanel = new JPanel(new WrapLayout(FlowLayout.LEADING)), JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
         AutoCompleteDecorator.decorate(combobox);
         combobox.addActionListener(e -> {
             if (e.getActionCommand().equals("comboBoxEdited")) {

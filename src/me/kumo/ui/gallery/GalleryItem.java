@@ -11,6 +11,7 @@ import me.kumo.io.pixiv.Pixiv;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.utils.Formatters;
 import me.kumo.ui.utils.IconButton;
+import me.kumo.ui.utils.RemoteImage;
 import me.kumo.ui.viewer.IllustrationViewer;
 
 import javax.swing.*;
@@ -18,6 +19,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
@@ -29,8 +31,8 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     private final ItemToolbar controls;
     protected IllustrationInfo info;
     private Illustration illustration;
-    private boolean shown;
     private MouseEvent mouseDownEvent;
+    private boolean shown;
 
     public GalleryItem() {
         setLayout(new OverlayLayout(this));
@@ -42,6 +44,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         add(controls = new ItemToolbar());
         add(info = new IllustrationInfo());
         add(image = new GalleryImage());
+        image.addPropertyChangeListener(RemoteImage.THUMBNAIL, evt -> {
+            if (evt.getNewValue() != null && illustration != null && evt.getNewValue() instanceof BufferedImage image) {
+                LocalGallery.processImage(illustration.getId(), image);
+            }
+        });
     }
 
     public Illustration getIllustration() {

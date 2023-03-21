@@ -37,7 +37,7 @@ public class ArtistDetails extends RemoteImage {
     }
 
     @Override
-    public boolean shouldResize() {
+    public boolean shouldMakeThumbnail() {
         return true;
     }
 }

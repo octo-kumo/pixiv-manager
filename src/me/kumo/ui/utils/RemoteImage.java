@@ -26,6 +26,7 @@ import static me.kumo.io.NetIO.fetchIllustration;
 
 public abstract class RemoteImage extends JComponent implements ProgressTracker.ProgressListener {
     private static final File CACHE = new File("cache");
+    public static final String THUMBNAIL = "thumbnail";
 
     static {
         if (!CACHE.exists() && !CACHE.mkdirs()) throw new RuntimeException("Unable to create cache directories");
@@ -79,7 +80,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
 
     public abstract boolean shouldSaveToLocal();
 
-    public abstract boolean shouldResize();
+    public abstract boolean shouldMakeThumbnail();
 
     public double getSpinnerSize() {
         return spinnerSize;
@@ -111,8 +112,13 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
     public void unloadImage() {
         if (isLoading()) loader.cancel(true);
         if (!hasLoaded()) return;
-        thumb = null;
+        setThumbnail(null);
         loader = null;
+    }
+
+    private void setThumbnail(BufferedImage image) {
+        firePropertyChange(THUMBNAIL, thumb, image);
+        thumb = image;
     }
 
     public void revalidateThumbnail() {
@@ -135,7 +141,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
     private class ImageLoader extends SwingWorker<BufferedImage, Object> {
         private BufferedImage refreshThumbnail() throws IOException, PixivException {
             BufferedImage image = loadThumbnail();
-            if (image == null) image = createThumbnail();
+            if (image == null) image = getImage();
             return image;
         }
 
@@ -156,7 +162,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         }
 
         private @Nullable BufferedImage loadThumbnail() throws IOException {
-            if (thumbnailFile != null && thumbnailFile.exists()) {
+            if (thumbnailFile != null && thumbnailFile.exists() && shouldMakeThumbnail()) {
                 ProgressInputStream input = new ProgressInputStream(new FileInputStream(thumbnailFile), thumbnailFile.length());
                 input.getTracker().addProgressListener(RemoteImage.this);
                 BufferedImage image = ImageIO.read(input);
@@ -166,13 +172,15 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
             return null;
         }
 
-        private @Nullable BufferedImage createThumbnail() throws PixivException, IOException {
+        private @Nullable BufferedImage getImage() throws PixivException, IOException {
             BufferedImage bigImage = loadImage();
             if (bigImage == null) return null;
-            BufferedImage thumbnail = ImageUtils.downScale(bigImage, getWidth(), getHeight());
-            bigImage.flush();
+            BufferedImage thumbnail = shouldMakeThumbnail() ? ImageUtils.downScale(bigImage, getWidth(), getHeight()) : bigImage;
             saveImage(bigImage);
-            cacheThumbnail(thumbnail);
+            if (shouldMakeThumbnail()) {
+                cacheThumbnail(thumbnail);
+                bigImage.flush();
+            }
             return thumbnail;
         }
 
@@ -186,7 +194,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         }
 
         private void cacheThumbnail(BufferedImage image) {
-            if (thumbnailFile != null)
+            if (thumbnailFile != null && shouldMakeThumbnail())
                 try (FileOutputStream fs = new FileOutputStream(thumbnailFile)) {
                     ImageIO.write(image, "png", fs);
                     fs.flush();
@@ -203,7 +211,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         protected void done() {
             super.done();
             try {
-                thumb = get();
+                setThumbnail(get());
             } catch (CancellationException | InterruptedException ignored) {
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof SocketTimeoutException) return;
