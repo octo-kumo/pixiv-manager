@@ -50,7 +50,7 @@ public class ImageUtils {
 
     public static BufferedImage downScale(BufferedImage image, int width, int height) {
         double ratio = Math.max(1. * width / image.getWidth(), 1. * height / image.getHeight());
-        return Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.AUTOMATIC,
+        return Scalr.resize(image, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC,
                 (int) (image.getWidth() * ratio),
                 (int) (image.getHeight() * ratio));
     }
@@ -69,10 +69,11 @@ public class ImageUtils {
         return Math.sqrt(Math.pow(c1.getRed() - c2.getRed(), 2) + Math.pow(c1.getGreen() - c2.getGreen(), 2) + Math.pow(c1.getBlue() - c2.getBlue(), 2));
     }
 
-    public static double minColorDifference(Color c1, Color[] colors) {
+    public static double minColorDifference(Color c1, Color[] colors, int max) {
         boolean seen = false;
         Double best = null;
-        for (Color c : colors) {
+        for (int i = 0; i < colors.length && i < max; i++) {
+            Color c = colors[i];
             Double colorDifference = colorDifference(c1, c);
             if (!seen || colorDifference.compareTo(best) < 0) {
                 seen = true;
@@ -80,5 +81,23 @@ public class ImageUtils {
             }
         }
         return seen ? best : Double.MAX_VALUE;
+    }
+
+    public static float minHueDifference(Color c1, Color[] colors, Integer max) {
+        boolean seen = false;
+        float best = 0;
+        float[] c1HSB = Color.RGBtoHSB(c1.getRed(), c1.getGreen(), c1.getBlue(), null);
+        float[] comparing = new float[3];
+        for (int i = 0; i < colors.length && i < max; i++) {
+            Color c = colors[i];
+            comparing = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), comparing);
+            float colorDifference = Math.abs(c1HSB[0] - comparing[0]);
+            if (colorDifference > 0.5) colorDifference = 1 - colorDifference;
+            if (!seen || colorDifference < best) {
+                seen = true;
+                best = colorDifference;
+            }
+        }
+        return seen ? best : Float.MAX_VALUE;
     }
 }

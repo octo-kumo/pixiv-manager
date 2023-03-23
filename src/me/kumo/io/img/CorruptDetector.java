@@ -13,8 +13,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 public class CorruptDetector extends SwingWorker<ArrayList<Pair<File, ImageScanner.Result>>, File> {
-    private final Consumer<ArrayList<Pair<File, ImageScanner.Result>>> listener;
     public final ProgressTracker tracker;
+    private final Consumer<ArrayList<Pair<File, ImageScanner.Result>>> listener;
     private final File[] files;
 
     public CorruptDetector(File folder, Consumer<ArrayList<Pair<File, ImageScanner.Result>>> listener) {

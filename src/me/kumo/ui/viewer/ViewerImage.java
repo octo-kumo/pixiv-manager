@@ -13,7 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 public class ViewerImage extends RemoteImage {
-    private final BufferedImage preload;
+    private BufferedImage preload;
     private Color[] colors;
 
     private long progress;
@@ -88,5 +88,11 @@ public class ViewerImage extends RemoteImage {
         this.total = tracker.getTotal();
         this.eta = tracker.getEta();
         this.speed = tracker.getSpeed();
+    }
+
+    public void dispose() {
+        unloadImage();
+        preload = null;
+        colors = null;
     }
 }

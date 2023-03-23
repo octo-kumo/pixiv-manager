@@ -7,9 +7,11 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class IllustrationViewer extends JPanel {
     public final Timer timer;
+    private final ArrayList<ViewerImage> images = new ArrayList<>();
 
     public IllustrationViewer(JDialog dialog, Illustration illustration, BufferedImage thumb) {
         super(new BorderLayout());
@@ -19,11 +21,9 @@ public class IllustrationViewer extends JPanel {
         if (illustration.getPageCount() > 1) {
             add(center = new JTabbedPane() {{
                 for (int i = 0; i < illustration.getMetaPages().size(); i++)
-                    addTab(String.valueOf(i + 1), new ViewerImage(illustration, i, thumb));
+                    addTab(String.valueOf(i + 1), addImage(new ViewerImage(illustration, i, thumb)));
             }}, BorderLayout.CENTER);
-        } else {
-            add(center = new ViewerImage(illustration, 0, thumb), BorderLayout.CENTER);
-        }
+        } else add(center = addImage(new ViewerImage(illustration, 0, thumb)), BorderLayout.CENTER);
         center.setPreferredSize(size);
 
         add(new BigIllustrationInfo(illustration), BorderLayout.EAST);
@@ -37,6 +37,11 @@ public class IllustrationViewer extends JPanel {
         timer = new Timer(16, e -> repaint());
     }
 
+    private ViewerImage addImage(ViewerImage image) {
+        images.add(image);
+        return image;
+    }
+
     public static void show(Frame owner, Illustration illustration, BufferedImage thumb) {
         JDialog dialog = new JDialog(owner, illustration.getTitle(), true);
         IllustrationViewer viewer = new IllustrationViewer(dialog, illustration, thumb);
@@ -47,11 +52,16 @@ public class IllustrationViewer extends JPanel {
             }
 
             public void windowClosed(WindowEvent e) {
+                viewer.dispose();
                 viewer.timer.stop();
             }
         });
         dialog.pack();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
+    }
+
+    private void dispose() {
+        images.forEach(ViewerImage::dispose);
     }
 }

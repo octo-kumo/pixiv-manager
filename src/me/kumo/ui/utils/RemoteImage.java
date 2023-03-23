@@ -138,6 +138,17 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         return thumb;
     }
 
+    @Override
+    public void addNotify() {
+        super.addNotify();
+    }
+
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        unloadImage();
+    }
+
     private class ImageLoader extends SwingWorker<BufferedImage, Object> {
         private BufferedImage refreshThumbnail() throws IOException, PixivException {
             BufferedImage image = loadThumbnail();
@@ -175,7 +186,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         private @Nullable BufferedImage getImage() throws PixivException, IOException {
             BufferedImage bigImage = loadImage();
             if (bigImage == null) return null;
-            BufferedImage thumbnail = shouldMakeThumbnail() ? ImageUtils.downScale(bigImage, getWidth(), getHeight()) : bigImage;
+            BufferedImage thumbnail = shouldMakeThumbnail() ? makeThumbnail(bigImage) : bigImage;
             saveImage(bigImage);
             if (shouldMakeThumbnail()) {
                 cacheThumbnail(thumbnail);
@@ -218,5 +229,9 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    protected BufferedImage makeThumbnail(BufferedImage image) {
+        return ImageUtils.downScale(image, getWidth(), getHeight());
     }
 }

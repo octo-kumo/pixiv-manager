@@ -1,8 +1,10 @@
 package me.kumo.ui.gallery;
 
 import me.kumo.io.ProgressTracker;
+import me.kumo.io.img.GaussianFilter;
 import me.kumo.ui.utils.Curves;
 import me.kumo.ui.utils.RemoteImage;
+import org.imgscalr.Scalr;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -14,6 +16,7 @@ public class GalleryImage extends RemoteImage {
     private static final double PARALLAX_AMOUNT = 20;
 
     private boolean shown = false;
+    private boolean blurred = false;
     private double px = 0, py = 0;
     private double tpx = 0, tpy = 0;
     private double rpx = 0, rpy = 0;
@@ -92,5 +95,24 @@ public class GalleryImage extends RemoteImage {
 
     public void setPressed(boolean pressed) {
         if (this.pressed != (this.pressed = pressed)) pressedChangeTime = System.currentTimeMillis();
+    }
+
+    public boolean isBlurred() {
+        return blurred;
+    }
+
+    public void setBlurred(boolean blurred) {
+        this.blurred = blurred;
+    }
+
+    protected BufferedImage makeThumbnail(BufferedImage image) {
+        if (blurred) return blur(super.makeThumbnail(image));
+        else return super.makeThumbnail(image);
+    }
+
+    private static BufferedImage blur(BufferedImage image) {
+        BufferedImage apply = Scalr.apply(image, new GaussianFilter(Math.max(image.getWidth(), image.getHeight()) / 20f));
+        image.flush();
+        return apply;
     }
 }

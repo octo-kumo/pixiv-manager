@@ -90,6 +90,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         File file = LocalGallery.getImage(String.valueOf(illustration.getId()));
         this.image.setUrl(illustration.getImageUrls().getMedium());
         this.image.setLocalFile(file);
+        this.image.setBlurred(illustration.getXRestrict() != 0);
     }
 
     @Override

@@ -96,17 +96,9 @@ public final class ImageScanner {
      */
     public static class Result {
 
-        public enum Type {
-            OK,
-            WARNING,
-            ERROR,
-            UNEXPECTED_ERROR
-        }
-
         private final StringBuilder messagesSb;
         private Boolean isOk;
         private Type resultType;
-
         public Result() {
             this.messagesSb = new StringBuilder();
             this.isOk = true;
@@ -133,7 +125,14 @@ public final class ImageScanner {
         public String toString() {
             return "Is image OK? " + isOk +
                     ", Result type: " + resultType +
-                    "\n" + messagesSb.toString();
+                    "\n" + messagesSb;
+        }
+
+        public enum Type {
+            OK,
+            WARNING,
+            ERROR,
+            UNEXPECTED_ERROR
         }
     }
 }

@@ -47,11 +47,26 @@ public class SortPane extends JPanel implements ActionListener {
                 return 0L;
             }
         }), this));
-        options.add(new ColorSortOption("Palette", SortOption.SortDirection.UNDEFINED, this));
 
         options.forEach(o -> {
             if (o instanceof JComponent c) add(c);
         });
+
+        QuickColorChooser cc = new QuickColorChooser("", Color.WHITE, c -> actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "")));
+        JComboBox<Integer> level = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
+        add(cc);
+        add(level);
+        int start = options.size();
+        options.add(new DefaultSortOption("sRGB", SortOption.SortDirection.UNDEFINED, Comparator.comparing(i ->
+                ImageUtils.minColorDifference(cc.getColor(),
+                        LocalGallery.getPalette(i.getId()), (Integer) level.getSelectedItem())), this));
+        options.add(new DefaultSortOption("Hue", SortOption.SortDirection.UNDEFINED, Comparator.comparing(i ->
+                ImageUtils.minHueDifference(cc.getColor(),
+                        LocalGallery.getPalette(i.getId()), (Integer) level.getSelectedItem())), this));
+
+        for (int i = start; i < options.size(); i++) {
+            if (options.get(i) instanceof JComponent c) add(c);
+        }
     }
 
     @Override
@@ -150,36 +165,6 @@ public class SortPane extends JPanel implements ActionListener {
         @Override
         public SortOption.SortDirection getDirection() {
             return direction;
-        }
-
-        @Override
-        public Comparator<Illustration> getComparator() {
-            return comparator;
-        }
-    }
-
-    public static class ColorSortOption extends JPanel implements SortOption {
-
-        private final Comparator<Illustration> comparator;
-        private final DefaultSortOption sort;
-
-        public ColorSortOption(String name, SortDirection direction, ActionListener actionListener) {
-            super(new FlowLayout());
-            QuickColorChooser cc = new QuickColorChooser("color", Color.WHITE, c -> actionListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "")));
-            comparator = Comparator.comparing(i -> ImageUtils.minColorDifference(cc.getColor(), LocalGallery.getPalette(i.getId())));
-
-            add(cc);
-            add(sort = new DefaultSortOption(name, direction, null, actionListener));
-        }
-
-        @Override
-        public SortDirection getDirection() {
-            return sort.getDirection();
-        }
-
-        @Override
-        public void setDirection(SortDirection direction) {
-//            sort.setDirection(direction);
         }
 
         @Override

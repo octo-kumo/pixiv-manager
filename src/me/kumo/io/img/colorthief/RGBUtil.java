@@ -23,11 +23,9 @@ public class RGBUtil {
     /**
      * Packs the RGB array into one int for storing into db or sending via network.
      *
-     * @param rgb
-     *            array containing red, green and blue values of the color to encode
+     * @param rgb array containing red, green and blue values of the color to encode
      * @return packed into int RGB value
-     * @throws IllegalArgumentException
-     *             if rgb has not exactly 3 elements
+     * @throws IllegalArgumentException if rgb has not exactly 3 elements
      */
     public static int packRGB(int[] rgb) {
         if (rgb.length != 3) {
@@ -39,8 +37,7 @@ public class RGBUtil {
     /**
      * Unpacks RGB array from the given int, e.g. received from calling {@link #packRGB(int[])}).
      *
-     * @param packedRgb
-     *            value containing RGB
+     * @param packedRgb value containing RGB
      * @return array containing red, green and blue values of the color
      */
     public static int[] unpackRGB(int packedRgb) {
@@ -52,12 +49,9 @@ public class RGBUtil {
     }
 
     /**
-     *
-     * @param rgbArray
-     *            the array of arrays containing unpacked RGB values
+     * @param rgbArray the array of arrays containing unpacked RGB values
      * @return the array of packed RGB values
-     * @throws IllegalArgumentException
-     *             if at least one of rgb has not exactly 3 elements
+     * @throws IllegalArgumentException if at least one of rgb has not exactly 3 elements
      */
     public static int[] packRGBArray(int[][] rgbArray) {
         int[] packedArray = new int[rgbArray.length];
@@ -68,9 +62,7 @@ public class RGBUtil {
     }
 
     /**
-     *
-     * @param packedRgbArray
-     *            the array of packed RGB values
+     * @param packedRgbArray the array of packed RGB values
      * @return the array of arrays containing unpacked RGB values
      */
     public static int[][] unpackRGBArray(int[] packedRgbArray) {
