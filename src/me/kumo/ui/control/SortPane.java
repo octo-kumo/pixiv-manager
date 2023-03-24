@@ -5,7 +5,6 @@ import com.github.weisj.darklaf.components.color.QuickColorChooser;
 import me.kumo.io.Icons;
 import me.kumo.io.ImageUtils;
 import me.kumo.io.LocalGallery;
-import me.kumo.ui.utils.WrapLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +23,7 @@ public class SortPane extends JPanel implements ActionListener {
     private boolean multiSorting = false;
 
     public SortPane(ControlPane controlPane) {
-        super(new WrapLayout(FlowLayout.LEADING));
+        super(new FlowLayout(FlowLayout.LEADING));
         add(new JCheckBox("Multi-sorting") {{
             addActionListener(e -> {
                 multiSorting = isSelected();
@@ -71,7 +70,7 @@ public class SortPane extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (!multiSorting)
+        if (!multiSorting && e.getSource() instanceof SortOption)
             options.stream().filter(o -> !Objects.equals(o, e.getSource())).forEach(o -> o.setDirection(SortOption.SortDirection.UNDEFINED));
         SwingUtilities.invokeLater(controlPane::applyAll);
     }

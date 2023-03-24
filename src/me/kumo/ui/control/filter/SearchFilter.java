@@ -6,7 +6,7 @@ import com.github.weisj.darklaf.components.text.SearchTextFieldWithHistory;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.io.Icons;
 import me.kumo.ui.control.ControlPane;
-import me.kumo.ui.utils.IconButton;
+import me.kumo.components.IconButton;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

@@ -1,9 +1,9 @@
 package me.kumo.ui.gallery;
 
+import me.kumo.components.image.RemoteImage;
+import me.kumo.components.utils.Curves;
+import me.kumo.image.gaussian.GaussianFilter;
 import me.kumo.io.ProgressTracker;
-import me.kumo.io.img.GaussianFilter;
-import me.kumo.ui.utils.Curves;
-import me.kumo.ui.utils.RemoteImage;
 import org.imgscalr.Scalr;
 
 import java.awt.*;
@@ -105,9 +105,10 @@ public class GalleryImage extends RemoteImage {
         this.blurred = blurred;
     }
 
-    protected BufferedImage makeThumbnail(BufferedImage image) {
-        if (blurred) return blur(super.makeThumbnail(image));
-        else return super.makeThumbnail(image);
+    @Override
+    protected void setThumbnail(BufferedImage image) {
+        if (blurred) super.setThumbnail(blur(image));
+        else super.setThumbnail(image);
     }
 
     private static BufferedImage blur(BufferedImage image) {

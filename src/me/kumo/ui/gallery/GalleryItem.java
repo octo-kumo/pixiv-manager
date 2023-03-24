@@ -6,12 +6,12 @@ import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
 import me.kumo.io.NetIO;
-import me.kumo.io.pixiv.DeleteBookmark;
-import me.kumo.io.pixiv.Pixiv;
+import me.kumo.pixiv.DeleteBookmark;
+import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.Refreshable;
-import me.kumo.ui.utils.Formatters;
-import me.kumo.ui.utils.IconButton;
-import me.kumo.ui.utils.RemoteImage;
+import me.kumo.components.utils.Formatters;
+import me.kumo.components.IconButton;
+import me.kumo.components.image.RemoteImage;
 import me.kumo.ui.viewer.IllustrationViewer;
 
 import javax.swing.*;

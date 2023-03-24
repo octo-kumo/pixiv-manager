@@ -2,7 +2,7 @@ package me.kumo.ui.artist;
 
 import com.github.hanshsieh.pixivj.model.UserDetail;
 import me.kumo.io.ProgressTracker;
-import me.kumo.ui.utils.RemoteImage;
+import me.kumo.components.image.RemoteImage;
 
 import java.awt.*;
 

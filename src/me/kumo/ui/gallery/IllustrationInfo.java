@@ -3,7 +3,7 @@ package me.kumo.ui.gallery;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
-import me.kumo.ui.utils.Formatters;
+import me.kumo.components.utils.Formatters;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

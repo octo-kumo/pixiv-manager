@@ -4,7 +4,7 @@ import com.github.hanshsieh.pixivj.model.UserDetail;
 import com.github.hanshsieh.pixivj.model.UserIllustQuery;
 import com.github.hanshsieh.pixivj.model.UserIllusts;
 import com.github.hanshsieh.pixivj.model.UserQuery;
-import me.kumo.io.pixiv.Pixiv;
+import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.managers.GalleryManager;
 
 import javax.swing.*;

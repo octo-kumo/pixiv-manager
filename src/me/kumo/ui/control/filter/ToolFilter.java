@@ -7,7 +7,6 @@ import com.github.weisj.darklaf.components.tristate.TristateState;
 import me.kumo.io.Process;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.ControlPane;
-import me.kumo.ui.utils.WrapLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,7 +24,7 @@ public class ToolFilter extends OverlayScrollPane implements IllustrationFilter,
 
     public ToolFilter(ControlPane controlPane) {
         super(null, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        getScrollPane().setViewportView(filters = new JPanel(new WrapLayout(FlowLayout.LEADING)));
+        getScrollPane().setViewportView(filters = new JPanel(new FlowLayout(FlowLayout.LEADING)));
         this.controlPane = controlPane;
     }
 

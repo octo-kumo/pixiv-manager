@@ -1,6 +1,7 @@
 package me.kumo.ui.control;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
+import com.github.weisj.darklaf.components.OverlayScrollPane;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.filter.OptionFilter;
 import me.kumo.ui.control.filter.SearchFilter;
@@ -35,7 +36,7 @@ public class ControlPane extends Box implements Refreshable<List<Illustration>> 
         advancedStuff.add(optionFilter = new OptionFilter(this));
         advancedStuff.add(tagFilter = new TagFilter(this));
         advancedStuff.add(toolFilter = new ToolFilter(this));
-        advancedStuff.add(sorters = new SortPane(this));
+        advancedStuff.add(new OverlayScrollPane(sorters = new SortPane(this), JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED));
         advancedStuff.setVisible(false);
         toolFilter.setVisible(false);
     }

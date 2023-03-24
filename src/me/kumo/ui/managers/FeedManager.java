@@ -4,8 +4,8 @@ import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.hanshsieh.pixivj.model.RankedIllusts;
 import com.github.hanshsieh.pixivj.model.RankedIllustsFilter;
 import com.github.hanshsieh.pixivj.model.SearchedIllusts;
-import me.kumo.io.pixiv.Pixiv;
-import me.kumo.io.pixiv.V2Filter;
+import me.kumo.pixiv.Pixiv;
+import me.kumo.pixiv.V2Filter;
 import me.kumo.ui.gallery.GalleryItem;
 import me.kumo.ui.gallery.HorizontalGallery;
 import me.kumo.ui.gallery.RankedItem;
@@ -67,7 +67,7 @@ public class FeedManager extends GalleryManager {
             @Override
             protected Object doInBackground() {
                 try {
-                    SearchedIllusts illusts = followNextURL == null ? pixiv.follow(new V2Filter()) :
+                    SearchedIllusts illusts = followNextURL == null ? pixiv.followFeed(new V2Filter()) :
                             pixiv.requestSender.send(pixiv.createApiReqBuilder().url(followNextURL).get().build(), SearchedIllusts.class);
                     followNextURL = illusts.getNextUrl();
                     append(illusts.getIllusts());

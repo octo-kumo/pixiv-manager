@@ -9,8 +9,8 @@ import com.github.hanshsieh.pixivj.util.JsonUtils;
 import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import me.kumo.io.Icons;
 import me.kumo.io.NetIO;
-import me.kumo.io.pixiv.Pixiv;
-import me.kumo.io.pixiv.V2Filter;
+import me.kumo.pixiv.Pixiv;
+import me.kumo.pixiv.V2Filter;
 import me.kumo.ui.gallery.GalleryItem;
 
 import javax.swing.*;

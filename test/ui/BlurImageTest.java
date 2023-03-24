@@ -1,6 +1,6 @@
 package ui;
 
-import me.kumo.io.img.GaussianFilter;
+import me.kumo.image.gaussian.GaussianFilter;
 import org.imgscalr.Scalr;
 
 import javax.imageio.ImageIO;

@@ -3,8 +3,8 @@ package me.kumo.io;
 import com.github.hanshsieh.pixivj.model.MetaPageImageUrls;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
-import me.kumo.io.img.colorthief.ColorThief;
-import me.kumo.ui.utils.Nullity;
+import me.kumo.components.utils.Nullity;
+import me.kumo.image.colorthief.ProminentColor;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class LocalGallery {
-    public static final String PATH = "/Users/zy/Documents/Pictures";
+    public static String PATH;
     private static final ConcurrentHashMap<String, File> ID_FILE_MAP = new ConcurrentHashMap<>();
 
     private static final File COLOR_MAP_FILE = new File("pixiv_mean_color_map.csv");
@@ -58,7 +58,7 @@ public class LocalGallery {
 
     public static void processImage(long id, BufferedImage image) {
         if (COLOR_MAP.containsKey(id)) return;
-        int[][] palette = ColorThief.getPalette(image, 5, 10, true);
+        int[][] palette = ProminentColor.getPalette(image, 5, 10, true);
         if (palette == null) return;
         Color[] colors = Arrays.stream(palette).map(is -> new Color(is[0], is[1], is[2])).toArray(Color[]::new);
         COLOR_MAP.put(id, colors);
@@ -69,7 +69,7 @@ public class LocalGallery {
     public static void processBigImage(long id, int idx, BufferedImage image) {
         Pair<Long, Integer> key = Pair.of(id, idx);
         if (BIG_COLOR_MAP.containsKey(key)) return;
-        int[][] palette = ColorThief.getPalette(image, 5, 10, true);
+        int[][] palette = ProminentColor.getPalette(image, 5, 10, true);
         if (palette == null) return;
         Color[] colors = Arrays.stream(palette).map(is -> new Color(is[0], is[1], is[2])).toArray(Color[]::new);
         BIG_COLOR_MAP.put(key, colors);
@@ -82,6 +82,11 @@ public class LocalGallery {
     public static void update() {
         ID_FILE_MAP.clear();
         FILES = new File(PATH).listFiles(new ImageFileFilter());
+    }
+
+    public static void setPath(String path) {
+        PATH = path;
+        update();
     }
 
     public static File getImage(long illusID) {

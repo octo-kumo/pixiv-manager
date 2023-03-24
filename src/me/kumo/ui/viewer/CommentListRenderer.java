@@ -4,7 +4,7 @@ import com.github.hanshsieh.pixivj.exception.PixivException;
 import com.github.hanshsieh.pixivj.model.Comment;
 import me.kumo.io.ImageUtils;
 import me.kumo.io.NetIO;
-import me.kumo.io.pixiv.Pixiv;
+import me.kumo.pixiv.Pixiv;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,16 +32,19 @@ public class CommentListRenderer implements ListCellRenderer<Comment> {
             }});
             author.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(author);
-            JEditorPane content = new JEditorPane();
-            content.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-            content.setFont(new Font(null, Font.PLAIN, 12));
+            JTextArea content = new JTextArea();
+//            content.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+//            content.setFont(new Font(null, Font.PLAIN, 12));
             content.setAlignmentX(LEFT_ALIGNMENT);
-            content.setContentType("text/html");
-            content.setEditable(false);
-            content.setText("<html>" + value.getComment() + "</html>");
-
+//            content.setContentType("text/html");
+//            content.setEditable(false);
+//            content.setText("<html>" + value.getComment() + "</html>");
+            content.setLineWrap(true);
+//            content.setWrapStyleWord(true);
+            content.setText(value.getComment());
             content.setAlignmentX(Component.LEFT_ALIGNMENT);
             content.setMaximumSize(new Dimension(200, Short.MAX_VALUE));
+            content.doLayout();
             add(content);
 
             SwingUtilities.invokeLater(() -> new SwingWorker<>() {

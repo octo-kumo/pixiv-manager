@@ -2,7 +2,7 @@ package me.kumo.ui.managers;
 
 import com.github.hanshsieh.pixivj.model.RecommendedIllusts;
 import com.github.hanshsieh.pixivj.model.RecommendedIllustsFilter;
-import me.kumo.io.pixiv.Pixiv;
+import me.kumo.pixiv.Pixiv;
 
 import javax.swing.*;
 import java.awt.*;

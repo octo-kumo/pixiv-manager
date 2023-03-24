@@ -4,7 +4,7 @@ import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.ControlPane;
 import me.kumo.ui.gallery.Gallery;
-import me.kumo.ui.utils.StartAndStoppable;
+import me.kumo.components.utils.StartAndStoppable;
 
 import javax.swing.*;
 import java.awt.*;

@@ -25,6 +25,21 @@ public class ImageUtils {
             RenderingHints.VALUE_FRACTIONALMETRICS_ON
     ));
 
+    public static final RenderingHints RENDERING_HINTS_FAST = new RenderingHints(Map.of(
+            RenderingHints.KEY_RENDERING,
+            RenderingHints.VALUE_RENDER_SPEED,
+            RenderingHints.KEY_COLOR_RENDERING,
+            RenderingHints.VALUE_COLOR_RENDER_SPEED,
+            RenderingHints.KEY_STROKE_CONTROL,
+            RenderingHints.VALUE_STROKE_PURE,
+            RenderingHints.KEY_ALPHA_INTERPOLATION,
+            RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED,
+            RenderingHints.KEY_TEXT_ANTIALIASING,
+            RenderingHints.VALUE_TEXT_ANTIALIAS_ON,
+            RenderingHints.KEY_FRACTIONALMETRICS,
+            RenderingHints.VALUE_FRACTIONALMETRICS_ON
+    ));
+
     public static BufferedImage scale(BufferedImage bufferedImage, double scale) {
         BufferedImage n = new BufferedImage((int) (scale * bufferedImage.getWidth()), (int) (scale * bufferedImage.getHeight()), bufferedImage.getType());
         Graphics2D g = n.createGraphics();

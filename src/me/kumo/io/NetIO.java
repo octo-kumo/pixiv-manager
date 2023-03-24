@@ -2,8 +2,8 @@ package me.kumo.io;
 
 import com.github.hanshsieh.pixivj.exception.PixivException;
 import com.github.hanshsieh.pixivj.model.Illustration;
-import me.kumo.io.pixiv.Pixiv;
-import me.kumo.ui.utils.FileTransferable;
+import me.kumo.pixiv.Pixiv;
+import me.kumo.components.utils.FileTransferable;
 import okhttp3.Response;
 
 import javax.imageio.ImageIO;

@@ -2,7 +2,7 @@ package me.kumo.ui;
 
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.io.Icons;
-import me.kumo.io.pixiv.Pixiv;
+import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.managers.BookmarkManager;
 import me.kumo.ui.managers.FeedManager;
 import me.kumo.ui.managers.GalleryManager;
@@ -27,6 +27,12 @@ public class MainControl extends JTabbedPane implements WindowFocusListener {
 
         addChangeListener(e -> updateTabs());
         updateTabs();
+    }
+
+    public GalleryManager getCurrentManager() {
+        Component component = getSelectedComponent();
+        if (component instanceof GalleryManager manager) return manager;
+        return null;
     }
 
     private void updateTabs() {

@@ -1,6 +1,6 @@
 package me.kumo.io;
 
-import me.kumo.ui.utils.MovingAvgLastN;
+import me.kumo.components.utils.MovingAvgLastN;
 
 import javax.swing.event.EventListenerList;
 import java.util.EventListener;

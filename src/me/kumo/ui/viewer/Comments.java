@@ -5,8 +5,8 @@ import com.github.hanshsieh.pixivj.model.IllustCommentsFilter;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.components.border.DarkBorders;
-import me.kumo.io.pixiv.Pixiv;
-import me.kumo.ui.utils.SmoothScroll;
+import me.kumo.pixiv.Pixiv;
+import me.kumo.components.utils.SmoothScroll;
 
 import javax.swing.*;
 import java.awt.*;

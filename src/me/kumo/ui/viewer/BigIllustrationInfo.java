@@ -6,7 +6,7 @@ import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.components.border.DarkBorders;
 import me.kumo.io.NetIO;
 import me.kumo.ui.artist.ArtistManager;
-import me.kumo.ui.utils.WrapLayout;
+import me.kumo.components.utils.WrapLayout;
 import org.jdesktop.swingx.hyperlink.HyperlinkAction;
 import org.jdesktop.swingx.plaf.basic.core.BasicTransferable;
 
