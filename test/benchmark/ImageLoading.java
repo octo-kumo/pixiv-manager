@@ -1,6 +1,5 @@
 package benchmark;
 
-import java.awt.*;
 import java.io.File;
 
 public class ImageLoading {

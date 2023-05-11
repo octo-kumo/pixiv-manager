@@ -1,7 +1,7 @@
 package me.kumo.ui.gallery;
 
-import me.kumo.io.LocalGallery;
 import me.kumo.components.utils.FileTransferable;
+import me.kumo.io.LocalGallery;
 
 import javax.swing.*;
 import java.awt.datatransfer.DataFlavor;

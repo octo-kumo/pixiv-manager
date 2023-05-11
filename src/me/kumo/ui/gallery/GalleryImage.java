@@ -1,10 +1,8 @@
 package me.kumo.ui.gallery;
 
 import me.kumo.components.image.RemoteImage;
-import me.kumo.components.utils.Curves;
-import me.kumo.image.gaussian.GaussianFilter;
+import me.kumo.components.utils.MathUtils;
 import me.kumo.io.ProgressTracker;
-import org.imgscalr.Scalr;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -30,9 +28,9 @@ public class GalleryImage extends RemoteImage {
 
     @Override
     public void drawImage(Graphics2D g, BufferedImage image) {
-        double enlarge = Curves.BezierBlend(Math.min(1, (System.currentTimeMillis() - hoverChangeTime) / 200d));
+        double enlarge = MathUtils.Curves.BezierBlend(Math.min(1, (System.currentTimeMillis() - hoverChangeTime) / 200d));
         if (!hover) enlarge = 1 - enlarge;
-        double pEnlarge = Curves.BezierBlend(Math.min(1, (System.currentTimeMillis() - pressedChangeTime) / 100d));
+        double pEnlarge = MathUtils.Curves.BezierBlend(Math.min(1, (System.currentTimeMillis() - pressedChangeTime) / 100d));
         if (!pressed) pEnlarge = 1 - pEnlarge;
         enlarge += pEnlarge * 0.2;
 
@@ -54,17 +52,17 @@ public class GalleryImage extends RemoteImage {
     }
 
     @Override
-    public boolean shouldSaveToLocal() {
+    protected boolean shouldSaveToLocal() {
         return false;
     }
 
     @Override
-    public boolean shouldMakeThumbnail() {
+    protected boolean shouldMakeThumbnail() {
         return true;
     }
 
     @Override
-    public void update(ProgressTracker tracker) {
+    public void onProgress(ProgressTracker tracker) {
 
     }
 
@@ -105,15 +103,15 @@ public class GalleryImage extends RemoteImage {
         this.blurred = blurred;
     }
 
-    @Override
-    protected void setThumbnail(BufferedImage image) {
-        if (blurred) super.setThumbnail(blur(image));
-        else super.setThumbnail(image);
-    }
-
-    private static BufferedImage blur(BufferedImage image) {
-        BufferedImage apply = Scalr.apply(image, new GaussianFilter(Math.max(image.getWidth(), image.getHeight()) / 20f));
-        image.flush();
-        return apply;
-    }
+//    @Override
+//    protected void setThumbnail(BufferedImage image) {
+//        if (blurred) super.setThumbnail(blur(image));
+//        else super.setThumbnail(image);
+//    }
+//
+//    private static BufferedImage blur(BufferedImage image) {
+//        BufferedImage apply = Scalr.apply(image, new GaussianFilter(Math.max(image.getWidth(), image.getHeight()) / 20f));
+//        image.flush();
+//        return apply;
+//    }
 }

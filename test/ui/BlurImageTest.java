@@ -39,13 +39,6 @@ public class BlurImageTest extends JComponent {
         });
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        g.drawLine(0, 0, getWidth(), getHeight());
-        g.drawImage(image, 0, 0, getWidth() / 2, getHeight(), null);
-        g.drawImage(blurred, getWidth() / 2, 0, getWidth() / 2, getHeight(), null);
-    }
-
     public static void main(String... args) {
         JFrame frame = new JFrame("Blur");
         frame.setContentPane(new BlurImageTest(frame));
@@ -57,6 +50,13 @@ public class BlurImageTest extends JComponent {
 
     public static BufferedImage blur(BufferedImage image) {
         return Scalr.apply(image, new GaussianFilter(Math.max(image.getWidth(), image.getHeight()) / 20f));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        g.drawLine(0, 0, getWidth(), getHeight());
+        g.drawImage(image, 0, 0, getWidth() / 2, getHeight(), null);
+        g.drawImage(blurred, getWidth() / 2, 0, getWidth() / 2, getHeight(), null);
     }
 
 }

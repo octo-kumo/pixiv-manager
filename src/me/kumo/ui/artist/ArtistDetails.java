@@ -1,8 +1,8 @@
 package me.kumo.ui.artist;
 
 import com.github.hanshsieh.pixivj.model.UserDetail;
-import me.kumo.io.ProgressTracker;
 import me.kumo.components.image.RemoteImage;
+import me.kumo.io.ProgressTracker;
 
 import java.awt.*;
 
@@ -15,7 +15,6 @@ public class ArtistDetails extends RemoteImage {
 
     public void setDetails(UserDetail detail) {
         this.detail = detail;
-        System.out.println("setDetails :: " + detail.getUser().getName());
         setUrl(detail.getProfile().getBackgroundImageUrl());
         loadImage();
     }
@@ -24,11 +23,10 @@ public class ArtistDetails extends RemoteImage {
     public void paintComponent(Graphics g1d) {
         Graphics2D g = (Graphics2D) g1d;
         super.paintComponent(g);
-//        g.setPaint(new GradientPaint());
     }
 
     @Override
-    public void update(ProgressTracker tracker) {
+    public void onProgress(ProgressTracker tracker) {
     }
 
     @Override

@@ -4,9 +4,9 @@ import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.hanshsieh.pixivj.model.Tag;
 import com.github.weisj.darklaf.components.text.SearchTextFieldWithHistory;
 import com.github.weisj.darklaf.iconset.AllIcons;
+import me.kumo.components.IconButton;
 import me.kumo.io.Icons;
 import me.kumo.ui.control.ControlPane;
-import me.kumo.components.IconButton;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

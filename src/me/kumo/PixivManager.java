@@ -8,21 +8,14 @@ import me.kumo.ui.MainControl;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowFocusListener;
 import java.io.File;
 import java.util.Objects;
 import java.util.prefs.Preferences;
 
-public class PixivManager extends JFrame implements WindowFocusListener {
+public class PixivManager extends JFrame {
     public static final String PIXIV_TOKEN = "pixiv_token";
     public static final String GALLERY_PATH = "gallery_path";
     public static Preferences preferences = Preferences.userNodeForPackage(PixivManager.class);
-
-    public MainControl getControls() {
-        return controls;
-    }
-
     private final MainControl controls;
 
     public PixivManager() {
@@ -51,20 +44,6 @@ public class PixivManager extends JFrame implements WindowFocusListener {
         pixivManager.askForToken(false);
     }
 
-    public void askForToken(boolean force) {
-        String pixivToken = getTokenOrNothing(force);
-        if (!force && pixivToken == null) {
-            JOptionPane.showMessageDialog(null, "Ok");
-            System.exit(1);
-            System.out.println("1");
-            return;
-        }
-        if (pixivToken != null) {
-            preferences.put(PIXIV_TOKEN, pixivToken);
-            Pixiv.getInstance().setToken(pixivToken);
-        }
-    }
-
     public static String getTokenOrNothing(boolean force) {
         String pixivToken = preferences.get(PIXIV_TOKEN, null);
         if (pixivToken != null && !force) return pixivToken;
@@ -88,15 +67,25 @@ public class PixivManager extends JFrame implements WindowFocusListener {
             galleryPath = file.getPath();
             JOptionPane.showMessageDialog(null, galleryPath + "\n" + Objects.requireNonNull(file.list()).length + " files", "Selected Gallery Folder", JOptionPane.INFORMATION_MESSAGE);
         }
+        preferences.put(GALLERY_PATH, galleryPath);
         return galleryPath;
     }
 
-    @Override
-    public void windowGainedFocus(WindowEvent e) {
-        LocalGallery.update();
+    public MainControl getControls() {
+        return controls;
     }
 
-    @Override
-    public void windowLostFocus(WindowEvent e) {
+    public void askForToken(boolean force) {
+        String pixivToken = getTokenOrNothing(force);
+        if (!force && pixivToken == null) {
+            JOptionPane.showMessageDialog(null, "Ok");
+            System.exit(1);
+            System.out.println("1");
+            return;
+        }
+        if (pixivToken != null) {
+            preferences.put(PIXIV_TOKEN, pixivToken);
+            Pixiv.getInstance().setToken(pixivToken);
+        }
     }
 }

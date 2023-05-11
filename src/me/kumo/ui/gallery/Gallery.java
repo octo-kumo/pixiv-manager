@@ -2,12 +2,11 @@ package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
-import me.kumo.io.LocalGallery;
-import me.kumo.pixiv.Pixiv;
-import me.kumo.ui.Refreshable;
 import me.kumo.components.utils.Formatters;
 import me.kumo.components.utils.SmoothScroll;
 import me.kumo.components.utils.StartAndStoppable;
+import me.kumo.pixiv.Pixiv;
+import me.kumo.ui.Refreshable;
 import me.tongfei.progressbar.ProgressBar;
 import org.jetbrains.annotations.NotNull;
 import oshi.SystemInfo;
@@ -27,20 +26,19 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Gallery extends OverlayScrollPane implements Refreshable<List<Illustration>>, Iterable<GalleryItem>, ActionListener, StartAndStoppable {
+    private static final SystemInfo SI = new SystemInfo();
+    private static final HardwareAbstractionLayer HAL = SI.getHardware();
+    private static final CentralProcessor CPU = HAL.getProcessor();
     public final JPanel grid;
     protected final ConcurrentHashMap<Long, GalleryItem> holderMap = new ConcurrentHashMap<>();
     private final Stack<GalleryItem> usedPool = new Stack<>();
     private final Timer timer;
+    private final SmoothScroll smoothScroll;
     protected int layoutItemCount;
+    protected long lastShownUpdate = 0;
     private int colCount;
     private SwingWorker<Object, Object> worker;
-
     private long last_frame_nanos = 0;
-    private final SmoothScroll smoothScroll;
-
-    private static final SystemInfo SI = new SystemInfo();
-    private static final HardwareAbstractionLayer HAL = SI.getHardware();
-    private static final CentralProcessor CPU = HAL.getProcessor();
 
     public Gallery() {
         super(null, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -60,8 +58,6 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
             }
         });
     }
-
-    protected long lastShownUpdate = 0;
 
     protected void updateShownParallax() {
         if ((System.nanoTime() - lastShownUpdate) / 1e9 < 0.032) return;
@@ -210,7 +206,6 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     }
 
     public void tapGallery() {
-        LocalGallery.update();
         usedPool.forEach(GalleryItem::updateImage);
     }
 
@@ -232,7 +227,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     }
 
     public void start() {
-        timer.start();
+        if (!timer.isRunning()) timer.start();
     }
 
     public void stop() {

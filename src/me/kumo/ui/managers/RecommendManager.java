@@ -6,6 +6,7 @@ import me.kumo.pixiv.Pixiv;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class RecommendManager extends GalleryManager {
     private final Pixiv pixiv;
@@ -29,6 +30,9 @@ public class RecommendManager extends GalleryManager {
             add(new JButton("More!") {{
                 addActionListener(e -> getMoreRecommend());
             }});
+            add(new JButton("Reset") {{
+                addActionListener(e -> reset());
+            }});
         }}, BorderLayout.SOUTH);
     }
 
@@ -40,8 +44,7 @@ public class RecommendManager extends GalleryManager {
             protected Object doInBackground() {
 
                 try {
-                    RecommendedIllusts illusts = recommendNextURL == null ? pixiv.getRecommendedIllusts(new RecommendedIllustsFilter()) :
-                            pixiv.requestSender.send(pixiv.createApiReqBuilder().url(recommendNextURL).get().build(), RecommendedIllusts.class);
+                    RecommendedIllusts illusts = recommendNextURL == null ? pixiv.getRecommendedIllusts(new RecommendedIllustsFilter()) : pixiv.requestSender.send(pixiv.createApiReqBuilder().url(recommendNextURL).get().build(), RecommendedIllusts.class);
                     recommendNextURL = illusts.getNextUrl();
                     System.out.println("getMoreRecommend :: " + illusts.getIllusts().size());
                     append(illusts.getIllusts());
@@ -52,5 +55,13 @@ public class RecommendManager extends GalleryManager {
             }
         };
         worker.execute();
+    }
+
+    public void reset() {
+        recommendNextURL = null;
+        if (this.illustrations == null) this.illustrations = new ArrayList<>();
+        this.illustrations.clear();
+        refresh(this.illustrations);
+        getMoreRecommend();
     }
 }

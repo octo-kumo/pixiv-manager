@@ -3,10 +3,7 @@ package me.kumo.ui;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.io.Icons;
 import me.kumo.pixiv.Pixiv;
-import me.kumo.ui.managers.BookmarkManager;
-import me.kumo.ui.managers.FeedManager;
-import me.kumo.ui.managers.GalleryManager;
-import me.kumo.ui.managers.RecommendManager;
+import me.kumo.ui.managers.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,15 +15,29 @@ public class MainControl extends JTabbedPane implements WindowFocusListener {
     private final RecommendManager recommended;
     private final BookmarkManager bookmarks;
     private final FeedManager feeds;
+    private final SearchManager search;
 
     public MainControl(Pixiv pixiv) {
         addTab("Recommended", AllIcons.Navigation.Glue.Vertical.get(), recommended = new RecommendManager(pixiv));
         addTab("Feed", AllIcons.Misc.Palette.get(), feeds = new FeedManager(pixiv));
         addTab("Bookmarks", Icons.heart.get(), bookmarks = new BookmarkManager(pixiv));
+        addTab("Search", AllIcons.Action.Search.get(), search = new SearchManager(pixiv));
 //        addTab("Browser", AllIcons.Action.Search.get(), editorPane = new JXEditorPane());
 
         addChangeListener(e -> updateTabs());
         updateTabs();
+    }
+
+    public RecommendManager getRecommended() {
+        return recommended;
+    }
+
+    public BookmarkManager getBookmarks() {
+        return bookmarks;
+    }
+
+    public FeedManager getFeeds() {
+        return feeds;
     }
 
     public GalleryManager getCurrentManager() {

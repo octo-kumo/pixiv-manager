@@ -4,9 +4,9 @@ import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.iconset.AllIcons;
+import me.kumo.components.utils.WrapLayout;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.ControlPane;
-import me.kumo.components.utils.WrapLayout;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import javax.swing.*;

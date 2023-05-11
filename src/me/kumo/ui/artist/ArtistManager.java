@@ -45,6 +45,7 @@ public class ArtistManager extends GalleryManager {
         manager.setPreferredSize(new Dimension(800, 600));
         dialog.setContentPane(manager);
         dialog.pack();
+        dialog.setLocationRelativeTo(null);
         dialog.addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {

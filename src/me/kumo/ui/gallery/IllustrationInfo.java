@@ -1,17 +1,25 @@
 package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
+import me.kumo.components.utils.Formatters;
+import me.kumo.components.utils.UnderlineOnHover;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
-import me.kumo.components.utils.Formatters;
+import me.kumo.ui.artist.ArtistManager;
+import org.ocpsoft.prettytime.PrettyTime;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.nio.file.Files;
 
 public class IllustrationInfo extends JPanel {
+    private static final PrettyTime PRETTY = new PrettyTime();
+
     public static final Color HALF_TRANSPARENT = new Color(0xaa000000, true);
+    private JLabel datetime;
     private JLabel fileSize;
     private JLabel sanity;
     private JLabel author;
@@ -22,6 +30,7 @@ public class IllustrationInfo extends JPanel {
     private JLabel pageNumber;
     private JLabel imageSize;
     private JLabel ai;
+    private Illustration illustration;
 
     public IllustrationInfo() {
         super(new BorderLayout());
@@ -30,9 +39,19 @@ public class IllustrationInfo extends JPanel {
         add(new Box(BoxLayout.Y_AXIS) {
             {
                 setBorder(new EmptyBorder(5, 5, 5, 5));
-                add(id = new JLabel(Icons.empty.get()));
-                add(views = new JLabel(Icons.eye.get()));
-                add(bookmarks = new JLabel(Icons.heart.get()));
+                add(new Box(BoxLayout.X_AXIS) {{
+                    add(id = new JLabel(Icons.empty.get()));
+                    add(datetime = new JLabel(Icons.empty.get()));
+                    add(Box.createHorizontalGlue());
+                }});
+                add(new Box(BoxLayout.X_AXIS) {{
+                    add(views = new JLabel(Icons.eye.get()));
+                    add(Box.createHorizontalGlue());
+                }});
+                add(new Box(BoxLayout.X_AXIS) {{
+                    add(bookmarks = new JLabel(Icons.heart.get()));
+                    add(Box.createHorizontalGlue());
+                }});
             }
 
             protected void paintComponent(Graphics g) {
@@ -76,6 +95,14 @@ public class IllustrationInfo extends JPanel {
             }});
             add(new Box(BoxLayout.X_AXIS) {{
                 add(author = new JLabel() {{
+                    setFocusable(true);
+                    addMouseListener(new UnderlineOnHover());
+                    addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            ArtistManager.open(SwingUtilities.getWindowAncestor(IllustrationInfo.this), illustration.getUser().getId());
+                        }
+                    });
                     setForeground(Color.WHITE);
                     setBackground(Color.GRAY);
                     setFont(getFont().deriveFont(Font.BOLD));
@@ -94,10 +121,11 @@ public class IllustrationInfo extends JPanel {
     }
 
     public void setIllustration(Illustration illustration) {
+        this.illustration = illustration;
         id.setText(String.valueOf(illustration.getId()));
         bookmarks.setText(String.valueOf(illustration.getTotalBookmarks()));
         views.setText(String.valueOf(illustration.getTotalView()));
-
+        datetime.setText(PRETTY.format(illustration.getCreateDate()));
         author.setText(illustration.getUser().getName() + (illustration.getUser().isFollowed() ? " \u2713" : ""));
         imageSize.setText(illustration.getWidth() + "\u00D7" + illustration.getHeight());
         r18.setVisible(illustration.getXRestrict() != 0);
@@ -110,8 +138,10 @@ public class IllustrationInfo extends JPanel {
         try {
             long size = Files.size(LocalGallery.getImage(illustration.getId()).toPath());
             fileSize.setText(Formatters.formatBytes(size));
+            fileSize.setVisible(true);
         } catch (Exception e) {
             fileSize.setText("NA");
+            fileSize.setVisible(false);
         }
     }
 }

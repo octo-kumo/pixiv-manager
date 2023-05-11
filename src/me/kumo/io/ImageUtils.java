@@ -39,6 +39,7 @@ public class ImageUtils {
             RenderingHints.KEY_FRACTIONALMETRICS,
             RenderingHints.VALUE_FRACTIONALMETRICS_ON
     ));
+    public static final BasicStroke ROUND_STROKE = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
     public static BufferedImage scale(BufferedImage bufferedImage, double scale) {
         BufferedImage n = new BufferedImage((int) (scale * bufferedImage.getWidth()), (int) (scale * bufferedImage.getHeight()), bufferedImage.getType());
@@ -69,8 +70,6 @@ public class ImageUtils {
                 (int) (image.getWidth() * ratio),
                 (int) (image.getHeight() * ratio));
     }
-
-    public static final BasicStroke ROUND_STROKE = new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
     public static void spinner(Graphics2D g, double x, double y, double r) {
         double clock = (System.currentTimeMillis() % 1000) / 1000d;

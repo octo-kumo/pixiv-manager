@@ -5,12 +5,12 @@ import com.github.hanshsieh.pixivj.exception.PixivException;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.hanshsieh.pixivj.model.SearchedIllusts;
 import com.github.hanshsieh.pixivj.model.User;
+import com.github.hanshsieh.pixivj.model.V2Filter;
 import com.github.hanshsieh.pixivj.util.JsonUtils;
 import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import me.kumo.io.Icons;
 import me.kumo.io.NetIO;
 import me.kumo.pixiv.Pixiv;
-import me.kumo.pixiv.V2Filter;
 import me.kumo.ui.gallery.GalleryItem;
 
 import javax.swing.*;
@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 
 public class BookmarkManager extends GalleryManager {
 
-    private static final String PATH = "bookmarks.json";
+    public static final String PATH = "bookmarks.json";
     private final Pixiv pixiv;
     private final ArrayList<Illustration> bookmarks;
     private LoadingIndicator indicator;
@@ -92,9 +92,11 @@ public class BookmarkManager extends GalleryManager {
             bookmarks.add(0, illustration);
             GalleryItem holder = gallery.getRefreshOrCreate(illustration);
             gallery.grid.add(holder, 0);
-        } else if (!illustration.isBookmarked() && bookmarks.removeIf(b -> Objects.equals(b.getId(), illustration.getId()))) {
+        } else if (!illustration.isBookmarked() && illustration.getRestrict() == 0 && bookmarks.removeIf(b -> Objects.equals(b.getId(), illustration.getId()))) {
             GalleryItem holder = gallery.getRefreshOrCreate(illustration);
             gallery.grid.remove(holder);
+        } else if (illustration.isBookmarked()) {
+            bookmarks.replaceAll(i -> illustration.getRestrict() == 0 && Objects.equals(i.getId(), illustration.getId()) ? illustration : i);
         }
         try {
             writeToFile();

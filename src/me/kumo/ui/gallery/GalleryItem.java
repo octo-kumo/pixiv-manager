@@ -3,15 +3,15 @@ package me.kumo.ui.gallery;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import com.github.weisj.darklaf.iconset.AllIcons;
+import me.kumo.components.IconButton;
+import me.kumo.components.image.RemoteImage;
+import me.kumo.components.utils.Formatters;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
 import me.kumo.io.NetIO;
-import me.kumo.pixiv.DeleteBookmark;
-import me.kumo.pixiv.Pixiv;
+import me.kumo.pixiv.BookmarkWorker;
+import me.kumo.pixiv.DownloadWorker;
 import me.kumo.ui.Refreshable;
-import me.kumo.components.utils.Formatters;
-import me.kumo.components.IconButton;
-import me.kumo.components.image.RemoteImage;
 import me.kumo.ui.viewer.IllustrationViewer;
 
 import javax.swing.*;
@@ -21,9 +21,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.concurrent.ExecutionException;
-
-import static me.kumo.io.NetIO.downloadIllustration;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class GalleryItem extends JPanel implements MouseListener, Refreshable<Illustration>, MouseMotionListener {
     public static final int MOUSE_DRAG_TOLERANCE = 25;
@@ -33,6 +32,10 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     private Illustration illustration;
     private MouseEvent mouseDownEvent;
     private boolean shown;
+
+    static {
+        ToolTipManager.sharedInstance().setInitialDelay(1000);
+    }
 
     public GalleryItem() {
         setLayout(new OverlayLayout(this));
@@ -66,6 +69,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         updateImage();
         info.setIllustration(illustration);
         controls.refresh(illustration);
+        setToolTipText(String.format("<html><body><h3><ruby>%s<rt><code>%d</code></rt></ruby></h3><p>%s</p><p>%s</p><p><b>%s</b></p></body></html>", illustration.getTitle(), illustration.getId(), illustration.getCaption(), illustration.getTags().stream().map(t -> "#" + t.getName()).collect(Collectors.joining(" ")), illustration.getUser().getAccount()));
     }
 
     public boolean isShown() {
@@ -87,10 +91,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     }
 
     public void updateImage() {
-        File file = LocalGallery.getImage(String.valueOf(illustration.getId()));
-        this.image.setUrl(illustration.getImageUrls().getMedium());
+        File file = LocalGallery.getImage(illustration.getId());
+        if (!Objects.equals(illustration.getImageUrls().getMedium(), "https://s.pximg.net/common/images/limit_unknown_360.png"))
+            this.image.setUrl(illustration.getImageUrls().getMedium());
         this.image.setLocalFile(file);
-        this.image.setBlurred(illustration.getXRestrict() != 0);
+//        this.image.setBlurred(illustration.getXRestrict() != 0);
     }
 
     @Override
@@ -107,7 +112,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     public void mouseReleased(MouseEvent e) {
         image.setPressed(false);
         if (mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) < MOUSE_DRAG_TOLERANCE)
-            IllustrationViewer.show((Frame) SwingUtilities.getWindowAncestor(this), illustration, image.getImage());
+            IllustrationViewer.show(SwingUtilities.getWindowAncestor(this), illustration, image.getImage());
     }
 
     @Override
@@ -150,7 +155,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         private IconButton file;
         private IconButton copy;
         private LoadingIndicator refreshProgress;
-        private SwingWorker<Boolean, Object> downloadWorker;
+        private DownloadWorker downloadWorker;
 
         private boolean done;
         private long total;
@@ -167,7 +172,6 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                     setVisible(false);
                 }});
                 add(refresh = new IconButton(Icons.download.get(), e -> {
-                    LocalGallery.update();
                     updateImage();
                     refresh(illustration);
                     if (image.downloaded()) return;
@@ -175,24 +179,10 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                 }));
                 add(bookmark = new IconButton(Icons.heart_path.get(), e -> {
                     bookmark.setEnabled(false);
-                    new SwingWorker<Boolean, Void>() {
-                        @Override
-                        protected Boolean doInBackground() {
-                            try {
-                                DeleteBookmark a = new DeleteBookmark(illustration.getId());
-                                if (illustration.isBookmarked()) Pixiv.getInstance().removeBookmark(a);
-                                else {
-                                    Pixiv.getInstance().addBookmark(a);
-                                    downloadIfNotExist();
-                                }
-                                Pixiv.getInstance().getIllustDetail(illustration.getId());
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            bookmark.setEnabled(true);
-                            return true;
-                        }
-                    }.execute();
+                    new BookmarkWorker(illustration, b -> {
+                        if (b) downloadIfNotExist();
+                        bookmark.setEnabled(true);
+                    }).execute();
                 }));
             }});
             add(bar1 = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0)) {{
@@ -207,33 +197,21 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
         public void download() {
             if (downloadWorker != null && !downloadWorker.isDone()) return;
-            downloadWorker = new SwingWorker<>() {
-                @Override
-                protected Boolean doInBackground() {
-                    refreshProgress.setVisible(true);
-                    refreshProgress.setRunning(true);
-                    refresh.setVisible(false);
-                    return downloadIllustration(Pixiv.getInstance(), illustration, (tracker) -> {
-                        progress = tracker.getProgress();
-                        total = tracker.getTotal();
-                        done = tracker.isDone();
-                    });
-                }
-
-                @Override
-                protected void done() {
-                    try {
-                        refreshProgress.setVisible(false);
-                        if (get()) {
-                            updateImage();
-                            refresh(illustration);
-                            info.setIllustration(illustration);
-                        } else refresh.setVisible(true);
-                    } catch (InterruptedException | ExecutionException ignored) {
-                        ignored.printStackTrace();
-                    }
-                }
-            };
+            refreshProgress.setVisible(true);
+            refreshProgress.setRunning(true);
+            refresh.setVisible(false);
+            downloadWorker = new DownloadWorker(illustration, (tracker) -> {
+                progress = tracker.getProgress();
+                total = tracker.getTotal();
+                done = tracker.isDone();
+            }, b -> {
+                refreshProgress.setVisible(false);
+                if (b) {
+                    updateImage();
+                    refresh(illustration);
+                    info.setIllustration(illustration);
+                } else refresh.setVisible(true);
+            });
             downloadWorker.execute();
         }
 

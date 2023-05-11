@@ -1,11 +1,7 @@
 package me.kumo.ui.managers;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.RankedIllusts;
-import com.github.hanshsieh.pixivj.model.RankedIllustsFilter;
-import com.github.hanshsieh.pixivj.model.SearchedIllusts;
+import com.github.hanshsieh.pixivj.model.*;
 import me.kumo.pixiv.Pixiv;
-import me.kumo.pixiv.V2Filter;
 import me.kumo.ui.gallery.GalleryItem;
 import me.kumo.ui.gallery.HorizontalGallery;
 import me.kumo.ui.gallery.RankedItem;
@@ -23,6 +19,7 @@ public class FeedManager extends GalleryManager {
     private String rankNextURL = null;
     private SwingWorker<Object, Void> followWorker;
     private SwingWorker<Object, Void> rankWorker;
+    private boolean showRanked = true;
 
     public FeedManager(Pixiv pixiv) {
         this.pixiv = pixiv;
@@ -109,12 +106,19 @@ public class FeedManager extends GalleryManager {
     @Override
     public void start() {
         gallery.start();
-        rankGallery.start();
+        if (showRanked) rankGallery.start();
     }
 
     @Override
     public void stop() {
         gallery.stop();
         rankGallery.stop();
+    }
+
+    public void setShowRanked(boolean showRanked) {
+        this.showRanked = showRanked;
+        if (showRanked) rankGallery.start();
+        else rankGallery.stop();
+        rankGallery.setVisible(showRanked);
     }
 }

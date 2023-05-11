@@ -2,7 +2,7 @@ package me.kumo.components.image;
 
 import com.github.hanshsieh.pixivj.exception.PixivException;
 import me.kumo.io.ImageUtils;
-import me.kumo.io.LocalGallery;
+import me.kumo.io.NetIO;
 import me.kumo.io.ProgressInputStream;
 import me.kumo.io.ProgressTracker;
 import me.kumo.pixiv.Pixiv;
@@ -13,42 +13,44 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
-import static me.kumo.io.NetIO.fetchIllustration;
-
 public abstract class RemoteImage extends JComponent implements ProgressTracker.ProgressListener {
-    private static final File CACHE = new File("cache");
     public static final String THUMBNAIL = "thumbnail";
+    public static final File CACHE = new File("cache");
 
     static {
         if (!CACHE.exists() && !CACHE.mkdirs()) throw new RuntimeException("Unable to create cache directories");
     }
 
+    @Nullable
+    protected File thumbnailFile;
     private ImageLoader loader;
     private double spinnerSize = 40;
-
     private @Nullable String url;
     private @Nullable File localFile;
     private @Nullable BufferedImage thumb;
-    private @Nullable File thumbnailFile;
+    private boolean failedToLoad = false;
 
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHints(ImageUtils.RENDERING_HINTS_FAST);
         if (hasLoaded()) drawImage(g2d, thumb);
         else drawProgress(g2d);
+        if (shouldMakeThumbnail()) revalidateThumbnail();
     }
 
     public void drawProgress(Graphics2D g) {
-        ImageUtils.spinner(g, getWidth() / 2d - getSpinnerSize(), getHeight() / 2d - getSpinnerSize(), getSpinnerSize());
+        if (failedToLoad)
+            g.drawString("Failed", getWidth() / 2f - g.getFontMetrics().stringWidth("Failed") / 2f, getHeight() / 2f);
+        else
+            ImageUtils.spinner(g, getWidth() / 2d - getSpinnerSize(), getHeight() / 2d - getSpinnerSize(), getSpinnerSize());
     }
 
     public void drawImage(Graphics2D g, BufferedImage image) {
@@ -67,7 +69,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
 
     public void setUrl(String url) {
         this.url = url;
-        this.thumbnailFile = new File(CACHE, url.substring(url.lastIndexOf('/') + 1));
+        if (url != null) this.thumbnailFile = new File(CACHE, url.substring(url.lastIndexOf('/') + 1));
     }
 
     public @Nullable File getLocalFile() {
@@ -78,9 +80,13 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         this.localFile = localFile;
     }
 
-    public abstract boolean shouldSaveToLocal();
+    protected abstract boolean shouldSaveToLocal();
 
-    public abstract boolean shouldMakeThumbnail();
+    protected abstract boolean shouldMakeThumbnail();
+
+    protected boolean shouldHaveProgress() {
+        return false;
+    }
 
     public double getSpinnerSize() {
         return spinnerSize;
@@ -102,11 +108,15 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         return loader != null && !loader.isDone() && !loader.isCancelled();
     }
 
-    public void loadImage() {
+    public void loadImage(boolean force) {
         if (isLoading()) return;
-        if (hasLoaded()) return;
+        if (hasLoaded() && !force) return;
         loader = new ImageLoader();
         loader.execute();
+    }
+
+    public void loadImage() {
+        loadImage(false);
     }
 
     public void unloadImage() {
@@ -117,21 +127,22 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
     }
 
     protected void setThumbnail(BufferedImage image) {
+        if (thumb == image) return;
         firePropertyChange(THUMBNAIL, thumb, image);
+        if (thumb != null) thumb.flush();
         thumb = image;
     }
 
     public void revalidateThumbnail() {
         if (hasLoaded()) {
             if (isThumbnailValid(thumb.getWidth(), thumb.getHeight())) return;
-            unloadImage();
-            loadImage();
-        } else loadImage();
+            loadImage(true);
+        }
     }
 
     public boolean isThumbnailValid(int w, int h) {
         double ratio = Math.max(getWidth() * 1d / w, getHeight() * 1d / h);
-        return !(ratio > 2 || (1 / ratio) > 2);
+        return !(ratio > 1.5 || (1 / ratio) > 1.5);
     }
 
     public BufferedImage getImage() {
@@ -141,12 +152,13 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
     @Override
     public void addNotify() {
         super.addNotify();
+        revalidateThumbnail();
     }
 
     @Override
     public void removeNotify() {
         super.removeNotify();
-        unloadImage();
+        revalidateThumbnail();
     }
 
     private class ImageLoader extends SwingWorker<BufferedImage, Object> {
@@ -158,8 +170,11 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
 
         private BufferedImage loadImage() throws PixivException, IOException {
             if (localFile != null && localFile.exists()) {
-                ProgressInputStream input = new ProgressInputStream(new FileInputStream(localFile), localFile.length());
-                input.getTracker().addProgressListener(RemoteImage.this);
+                InputStream input = new FileInputStream(localFile);
+                if (shouldHaveProgress()) {
+                    input = new ProgressInputStream(input, localFile.length());
+                    ((ProgressInputStream) input).getTracker().addProgressListener(RemoteImage.this);
+                }
                 try {
                     return Objects.requireNonNull(ImageIO.read(input));
                 } catch (IIOException ignored) {
@@ -169,13 +184,24 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
                     System.out.println(localFile.toString());
                 }
             }
-            return fetchIllustration(Pixiv.getInstance(), url, RemoteImage.this);
+            if (url == null) return null;
+            if (shouldSaveToLocal() && localFile != null) {
+                if (shouldHaveProgress())
+                    return NetIO.fetchImage(Pixiv.getInstance(), url, RemoteImage.this, localFile);
+                else return NetIO.fetchImage(Pixiv.getInstance(), url, localFile);
+            } else {
+                if (shouldHaveProgress()) return NetIO.fetchImage(Pixiv.getInstance(), url, RemoteImage.this);
+                else return NetIO.fetchImage(Pixiv.getInstance(), url);
+            }
         }
 
         private @Nullable BufferedImage loadThumbnail() throws IOException {
             if (thumbnailFile != null && thumbnailFile.exists() && shouldMakeThumbnail()) {
-                ProgressInputStream input = new ProgressInputStream(new FileInputStream(thumbnailFile), thumbnailFile.length());
-                input.getTracker().addProgressListener(RemoteImage.this);
+                InputStream input = new FileInputStream(thumbnailFile);
+                if (shouldHaveProgress()) {
+                    input = new ProgressInputStream(input, thumbnailFile.length());
+                    ((ProgressInputStream) input).getTracker().addProgressListener(RemoteImage.this);
+                }
                 BufferedImage image = ImageIO.read(input);
                 if (!isThumbnailValid(image.getWidth(), image.getHeight())) return null;
                 return image;
@@ -187,21 +213,11 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
             BufferedImage bigImage = loadImage();
             if (bigImage == null) return null;
             BufferedImage thumbnail = shouldMakeThumbnail() ? ImageUtils.downScale(bigImage, getWidth(), getHeight()) : bigImage;
-            saveImage(bigImage);
             if (shouldMakeThumbnail()) {
                 cacheThumbnail(thumbnail);
                 bigImage.flush();
             }
             return thumbnail;
-        }
-
-        private void saveImage(BufferedImage image) {
-            if (localFile != null && shouldSaveToLocal())
-                try (FileOutputStream fs = new FileOutputStream(localFile)) {
-                    ImageIO.write(image, LocalGallery.getExtension(localFile.getName()), fs);
-                    fs.flush();
-                } catch (Exception ignored) {
-                }
         }
 
         private void cacheThumbnail(BufferedImage image) {
@@ -215,6 +231,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
 
         @Override
         protected BufferedImage doInBackground() throws Exception {
+            failedToLoad = false;
             return refreshThumbnail();
         }
 
@@ -225,8 +242,13 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
                 setThumbnail(get());
             } catch (CancellationException | InterruptedException ignored) {
             } catch (ExecutionException e) {
-                if (e.getCause() instanceof SocketTimeoutException) return;
-                throw new RuntimeException(e);
+                if (e.getCause() instanceof SocketTimeoutException
+                        || e.getCause() instanceof SocketException
+                        || e.getCause().getCause() instanceof SocketException) {
+                    failedToLoad = true;
+                } else if (e.getCause() instanceof IIOException) {
+                    System.out.println("Corrupt File " + localFile);
+                } else throw new RuntimeException(e);
             }
         }
     }

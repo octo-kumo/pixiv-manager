@@ -10,8 +10,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
@@ -39,13 +37,7 @@ public class SortPane extends JPanel implements ActionListener {
         options.add(new DefaultSortOption("Date", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getCreateDate), this));
         options.add(new DefaultSortOption("Sanity", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getSanityLevel), this));
         options.add(new DefaultSortOption("Pixel", SortOption.SortDirection.UNDEFINED, Comparator.comparing(i -> i.getWidth() * i.getHeight()), this));
-        options.add(new DefaultSortOption("File", SortOption.SortDirection.UNDEFINED, Comparator.comparing(i -> {
-            try {
-                return Files.size(LocalGallery.getImage(i.getId()).toPath());
-            } catch (IOException | NullPointerException e) {
-                return 0L;
-            }
-        }), this));
+        options.add(new DefaultSortOption("Pages", SortOption.SortDirection.UNDEFINED, Comparator.comparing(Illustration::getPageCount), this));
 
         options.forEach(o -> {
             if (o instanceof JComponent c) add(c);
@@ -86,7 +78,22 @@ public class SortPane extends JPanel implements ActionListener {
         for (SortOption option : options) option.setDirection(SortOption.SortDirection.UNDEFINED);
     }
 
-    private interface SortOption extends Comparator<Illustration> {
+    public interface SortOption extends Comparator<Illustration> {
+
+        static Icon getIcon(SortOption.SortDirection direction) {
+            switch (direction) {
+                case UNDEFINED -> {
+                    return Icons.empty.get();
+                }
+                case UP -> {
+                    return Icons.up.get();
+                }
+                case DOWN -> {
+                    return Icons.down.get();
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + direction);
+            }
+        }
 
         default int compare(Illustration o1, Illustration o2) {
             return (getDirection() == SortOption.SortDirection.UP ? 1 : getDirection() == SortOption.SortDirection.DOWN ? -1 : 0) * getComparator().compare(o1, o2);
@@ -105,37 +112,22 @@ public class SortPane extends JPanel implements ActionListener {
         enum SortDirection {
             UNDEFINED() {
                 @Override
-                public SortDirection next() {
+                public SortDirection next(boolean nullable) {
                     return DOWN;
                 }
             }, DOWN() {
                 @Override
-                public SortDirection next() {
+                public SortDirection next(boolean nullable) {
                     return UP;
                 }
             }, UP() {
                 @Override
-                public SortDirection next() {
-                    return UNDEFINED;
+                public SortDirection next(boolean nullable) {
+                    return nullable ? UNDEFINED : DOWN;
                 }
             };
 
-            public abstract SortDirection next();
-        }
-
-        static Icon getIcon(SortOption.SortDirection direction) {
-            switch (direction) {
-                case UNDEFINED -> {
-                    return Icons.empty.get();
-                }
-                case UP -> {
-                    return Icons.up.get();
-                }
-                case DOWN -> {
-                    return Icons.down.get();
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + direction);
-            }
+            public abstract SortDirection next(boolean nullable);
         }
     }
 
@@ -144,26 +136,29 @@ public class SortPane extends JPanel implements ActionListener {
         private SortOption.SortDirection direction;
 
         public DefaultSortOption(String name, SortOption.SortDirection direction, Comparator<Illustration> comparator, ActionListener actionListener) {
+            this(name, direction, comparator, true, actionListener);
+        }
+
+        public DefaultSortOption(String name, SortDirection direction, Comparator<Illustration> comparator, boolean nullable, ActionListener actionListener) {
             super(name, SortOption.getIcon(direction));
             this.setDirection(direction);
             this.comparator = comparator;
 
             addActionListener(e -> {
-                setDirection(this.getDirection().next());
+                setDirection(this.getDirection().next(nullable));
                 actionListener.actionPerformed(e);
             });
+        }
+
+        @Override
+        public SortOption.SortDirection getDirection() {
+            return direction;
         }
 
         @Override
         public void setDirection(SortOption.SortDirection direction) {
             this.direction = direction;
             setIcon(SortOption.getIcon(this.direction));
-        }
-
-
-        @Override
-        public SortOption.SortDirection getDirection() {
-            return direction;
         }
 
         @Override

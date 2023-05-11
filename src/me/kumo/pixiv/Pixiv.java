@@ -30,6 +30,10 @@ public class Pixiv extends PixivApiClient {
         list = new EventListenerList();
     }
 
+    public static Pixiv getInstance() {
+        return instance;
+    }
+
     public void setToken(String token) {
         ((UserRefresher) tokenProvider).setToken(token);
         SwingUtilities.invokeLater(() -> {
@@ -42,20 +46,6 @@ public class Pixiv extends PixivApiClient {
         });
     }
 
-    public static Pixiv getInstance() {
-        return instance;
-    }
-
-    @NonNull
-    public SearchedIllusts bookmarks(@NonNull V2Filter filter) throws PixivException, IOException {
-        return sendGetRequest("v1/user/bookmarks/illust", filter, SearchedIllusts.class);
-    }
-
-    @NonNull
-    public SearchedIllusts followFeed(@NonNull V2Filter filter) throws PixivException, IOException {
-        return sendGetRequest("v2/illust/follow", filter, SearchedIllusts.class);
-    }
-
     @NonNull
     public IllustDetail getIllustDetail(long illustId) throws PixivException, IOException {
         IllustDetail detail = super.getIllustDetail(illustId);
@@ -65,21 +55,6 @@ public class Pixiv extends PixivApiClient {
 
     public void addOnLoadListener(PixivOnLoadListener listener) {
         ((UserRefresher) tokenProvider).addPixivOnLoadListener(listener);
-    }
-
-    public void removeBookmark(@NonNull DeleteBookmark bookmark) throws PixivException, IOException {
-        HttpUrl url = baseUrl.newBuilder()
-                .addEncodedPathSegments("v1/illust/bookmark/delete")
-                .build();
-        RequestBody formBody = new FormBody.Builder()
-                .add("illust_id", String.valueOf(bookmark.getIllustId()))
-                .add("restrict", bookmark.getRestrict().string())
-                .build();
-        Request request = createApiReqBuilder()
-                .url(url)
-                .post(formBody)
-                .build();
-        requestSender.send(request, DeleteBookmarkResult.class);
     }
 
     public void addIllustUpdateListener(IllustUpdateListener l) {

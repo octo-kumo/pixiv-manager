@@ -1,23 +1,30 @@
 package me.kumo.io;
 
 import com.github.hanshsieh.pixivj.model.MetaPageImageUrls;
+import com.github.weisj.darklaf.iconset.AllIcons;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import me.kumo.components.image.RemoteImage;
+import me.kumo.components.utils.Formatters;
 import me.kumo.components.utils.Nullity;
 import me.kumo.image.colorthief.ProminentColor;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NonNls;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class LocalGallery {
-    public static String PATH;
-    private static final ConcurrentHashMap<String, File> ID_FILE_MAP = new ConcurrentHashMap<>();
+    private static final String @NonNls [] OK_FILE_EXTENSIONS = new String[]{"jpg", "jpeg", "png", "gif"};
 
     private static final File COLOR_MAP_FILE = new File("pixiv_mean_color_map.csv");
     private static final File BIG_COLOR_MAP_FILE = new File("pixiv_mean_color_map_large.csv");
@@ -25,6 +32,7 @@ public class LocalGallery {
     private static final ConcurrentHashMap<Pair<Long, Integer>, Color[]> BIG_COLOR_MAP = new ConcurrentHashMap<>();
     private static final CSVWriter COLOR_MAP_WRITER;
     private static final CSVWriter BIG_COLOR_MAP_WRITER;
+    public static String PATH;
 
     static {
         try (CSVReader reader_small = new CSVReader(new FileReader(COLOR_MAP_FILE));
@@ -77,16 +85,8 @@ public class LocalGallery {
         BIG_COLOR_MAP_WRITER.flushQuietly();
     }
 
-    private static File[] FILES;
-
-    public static void update() {
-        ID_FILE_MAP.clear();
-        FILES = new File(PATH).listFiles(new ImageFileFilter());
-    }
-
     public static void setPath(String path) {
         PATH = path;
-        update();
     }
 
     public static File getImage(long illusID) {
@@ -94,10 +94,12 @@ public class LocalGallery {
     }
 
     synchronized public static File getImage(String illusID) {
-        return ID_FILE_MAP.computeIfAbsent(illusID, i -> {
-            Optional<File> file = Arrays.stream(FILES).filter(f -> f.getName().startsWith(illusID)).findAny();
-            return file.orElse(null);
-        });
+        if (illusID.indexOf('.') != -1) return new File(PATH, illusID);
+        for (String ext : OK_FILE_EXTENSIONS) {
+            File file = new File(PATH, illusID + "_p0." + ext);
+            if (file.exists()) return file;
+        }
+        return null;
     }
 
     public static String getBestQuality(MetaPageImageUrls urls) {
@@ -108,21 +110,102 @@ public class LocalGallery {
         return Nullity.coalesce(urls.getMedium(), urls.getLarge(), urls.getOriginal());
     }
 
-    public static class ImageFileFilter implements FilenameFilter {
-        private final String[] okFileExtensions = new String[]{"jpg", "jpeg", "png", "gif"};
-
-        @Override
-        public boolean accept(File dir, String name) {
-            return Arrays.stream(okFileExtensions).anyMatch(extension -> name.toLowerCase().endsWith(extension));
-        }
-    }
-
-    public static String getExtension(String name) {
+    public static @NonNls String getExtension(String name) {
         return switch (name.substring(name.lastIndexOf('.') + 1).toLowerCase()) {
             case "png" -> "png";
             case "jpg", "jpeg" -> "jpg";
             case "gif" -> "gif";
             default -> throw new RuntimeException("Unknown extension: " + name);
         };
+    }
+
+    public static class ImageFileFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            return Arrays.stream(OK_FILE_EXTENSIONS).anyMatch(extension -> name.toLowerCase().endsWith(extension));
+        }
+    }
+
+    public static void showCache(Window parent) {
+        JDialog dialog = new JDialog(parent, "Cache");
+        dialog.setContentPane(new CachePopup());
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
+    }
+
+    public static class CachePopup extends Box {
+        private final JPanel top;
+        private final JLabel fileCount;
+        private final JLabel fileSize;
+        private final AtomicLong totalSize = new AtomicLong(0);
+        private final JProgressBar prog;
+        private SwingWorker<Long, Long> calcWorker;
+
+        public CachePopup() {
+            super(BoxLayout.Y_AXIS);
+            add(top = new JPanel(new FlowLayout()));
+            top.add(fileCount = new JLabel(AllIcons.Files.General.get()));
+            top.add(fileSize = new JLabel(AllIcons.Files.Folder.get()));
+            add(prog = new JProgressBar());
+            add(new JButton("Refresh") {{
+                addActionListener(e -> {
+                    calcSize();
+                    refresh();
+                });
+            }});
+            add(new JButton("Clear") {{
+                addActionListener(e -> {
+                    Desktop.getDesktop().moveToTrash(RemoteImage.CACHE);
+                    RemoteImage.CACHE.mkdir();
+                });
+            }});
+
+            calcSize();
+            refresh();
+        }
+
+        private void calcSize() {
+            calcWorker = new SwingWorker<>() {
+                @Override
+                protected Long doInBackground() {
+                    totalSize.set(0);
+                    processFiles(Objects.requireNonNull(RemoteImage.CACHE.listFiles()));
+                    return totalSize.get();
+                }
+
+                private void processFiles(File[] files) {
+                    for (int i = 0; i < files.length; i++) {
+                        File file = files[i];
+                        if (file.isDirectory()) processFiles(Objects.requireNonNull(file.listFiles()));
+                        else totalSize.addAndGet(file.length());
+                        prog.setMaximum(files.length);
+                        prog.setValue(i);
+                    }
+                }
+
+                @Override
+                protected void process(List<Long> chunks) {
+                    totalSize.set(chunks.get(chunks.size() - 1));
+                    fileSize.setText(Formatters.formatBytes(totalSize.get()));
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        totalSize.set(get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                    fileSize.setText(Formatters.formatBytes(totalSize.get()));
+                }
+            };
+            calcWorker.execute();
+        }
+
+        public void refresh() {
+            fileCount.setText(String.valueOf(Objects.requireNonNull(RemoteImage.CACHE.list()).length));
+        }
     }
 }

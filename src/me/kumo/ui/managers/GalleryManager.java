@@ -1,10 +1,10 @@
 package me.kumo.ui.managers;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
+import me.kumo.components.utils.StartAndStoppable;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.ControlPane;
 import me.kumo.ui.gallery.Gallery;
-import me.kumo.components.utils.StartAndStoppable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,8 +14,8 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public class GalleryManager extends JPanel implements Refreshable<List<Illustration>>, Supplier<ArrayList<Illustration>>, StartAndStoppable {
-    protected final ControlPane filter;
-    protected final Gallery gallery;
+    public final ControlPane filter;
+    public final Gallery gallery;
 
     protected ArrayList<Illustration> illustrations;
 

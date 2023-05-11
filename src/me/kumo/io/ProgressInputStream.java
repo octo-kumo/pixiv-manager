@@ -8,18 +8,16 @@ import java.io.InputStream;
 public class ProgressInputStream extends InputStream {
 
     private final InputStream in;
-
-    public ProgressTracker getTracker() {
-        return tracker;
-    }
-
     private final ProgressTracker tracker;
 
     public ProgressInputStream(InputStream inputStream, long length) {
         this.in = inputStream;
-        this.tracker = new ProgressTracker(32, length);
+        this.tracker = new ProgressTracker(1024, length);
     }
 
+    public ProgressTracker getTracker() {
+        return tracker;
+    }
 
     @Override
     public int read(byte @NotNull [] b) throws IOException {
