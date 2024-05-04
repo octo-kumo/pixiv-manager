@@ -1,5 +1,6 @@
 package me.kumo.io;
 
+import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.hanshsieh.pixivj.model.MetaPageImageUrls;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import com.opencsv.CSVReader;
@@ -21,7 +22,9 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LocalGallery {
     private static final String @NonNls [] OK_FILE_EXTENSIONS = new String[]{"jpg", "jpeg", "png", "gif"};
@@ -35,16 +38,9 @@ public class LocalGallery {
     public static String PATH;
 
     static {
-        try (CSVReader reader_small = new CSVReader(new FileReader(COLOR_MAP_FILE));
-             CSVReader reader_big = new CSVReader(new FileReader(BIG_COLOR_MAP_FILE))) {
-            COLOR_MAP.putAll(reader_small.readAll().stream().collect(Collectors.toMap(
-                    s -> Long.parseLong(s[0]),
-                    s -> Arrays.stream(s[1].split("\\|")).map(Color::decode).toArray(Color[]::new),
-                    (a, b) -> b)));
-            BIG_COLOR_MAP.putAll(reader_big.readAll().stream().collect(Collectors.toMap(
-                    s -> Pair.of(Long.parseLong(s[0]), Integer.parseInt(s[1])),
-                    s -> Arrays.stream(s[2].split("\\|")).map(Color::decode).toArray(Color[]::new),
-                    (a, b) -> b)));
+        try (CSVReader reader_small = new CSVReader(new FileReader(COLOR_MAP_FILE)); CSVReader reader_big = new CSVReader(new FileReader(BIG_COLOR_MAP_FILE))) {
+            COLOR_MAP.putAll(reader_small.readAll().stream().collect(Collectors.toMap(s -> Long.parseLong(s[0]), s -> Arrays.stream(s[1].split("\\|")).map(Color::decode).toArray(Color[]::new), (a, b) -> b)));
+            BIG_COLOR_MAP.putAll(reader_big.readAll().stream().collect(Collectors.toMap(s -> Pair.of(Long.parseLong(s[0]), Integer.parseInt(s[1])), s -> Arrays.stream(s[2].split("\\|")).map(Color::decode).toArray(Color[]::new), (a, b) -> b)));
         } catch (IOException ignored) {
         } finally {
             try {
@@ -91,6 +87,21 @@ public class LocalGallery {
 
     public static File getImage(long illusID) {
         return getImage(String.valueOf(illusID));
+    }
+
+    public static List<File> getImages(Illustration illustration) {
+        File[] files = new File[illustration.getPageCount()];
+        for (int i = 0; i < illustration.getPageCount(); i++) {
+            int finalI = i;
+            files[i] = ((Supplier<File>) () -> {
+                for (String ext : OK_FILE_EXTENSIONS) {
+                    File file = new File(PATH, illustration.getId() + "_p" + finalI + "." + ext);
+                    if (file.exists()) return file;
+                }
+                return null;
+            }).get();
+        }
+        return Stream.of(files).filter(Objects::nonNull).toList();
     }
 
     synchronized public static File getImage(String illusID) {

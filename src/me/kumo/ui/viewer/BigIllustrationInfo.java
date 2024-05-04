@@ -48,7 +48,7 @@ public class BigIllustrationInfo extends JPanel implements IllustUpdateListener 
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    NetIO.open(URI.create("https://pixiv.net/artworks/" + BigIllustrationInfo.this.illustration.getId()));
+                    NetIO.openURL(URI.create("https://pixiv.net/artworks/" + BigIllustrationInfo.this.illustration.getId()));
                 }
             });
             setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
@@ -105,7 +105,7 @@ public class BigIllustrationInfo extends JPanel implements IllustUpdateListener 
 
             addHyperlinkListener(e -> {
                 if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) try {
-                    NetIO.open(e.getURL().toURI());
+                    NetIO.openURL(e.getURL().toURI());
                 } catch (URISyntaxException ex) {
                     ex.printStackTrace();
                 }

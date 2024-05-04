@@ -9,7 +9,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
-import java.util.List;
 
 public class GalleryItemHandler extends TransferHandler {
     public int getSourceActions(JComponent c) {
@@ -19,7 +18,7 @@ public class GalleryItemHandler extends TransferHandler {
     public Transferable createTransferable(JComponent c) {
         if (c instanceof GalleryItem) {
             if (((GalleryItem) c).image.downloaded()) {
-                return new FileTransferable(List.of(LocalGallery.getImage(((GalleryItem) c).getIllustration().getId())));
+                return new FileTransferable(LocalGallery.getImages(((GalleryItem) c).getIllustration()));
             } else {
                 return new StringSelection("https://pixiv.net/artworks/" + ((GalleryItem) c).getIllustration().getId());
             }

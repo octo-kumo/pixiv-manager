@@ -6,6 +6,7 @@ plugins {
 
 group = 'me.kumo'
 version = '0.0.2'
+
 application {
     mainClass = 'me.kumo.PixivManager'
 }
@@ -34,7 +35,7 @@ dependencies {
     implementation('com.opencsv:opencsv:3.7')
     implementation('org.ocpsoft.prettytime:prettytime:5.0.6.Final')
     implementation('com.github.oshi:oshi-core:6.4.0')
-    implementation('me.tongfei:progressbar:0.9.4')
+    implementation('me.tongfei:progressbar:0.10.1')
     implementation('org.swinglabs.swingx:swingx-all:1.6.4')
     implementation('org.imgscalr:imgscalr-lib:4.2')
     implementation('com.github.hanshsieh:pixivj:1.2.3')

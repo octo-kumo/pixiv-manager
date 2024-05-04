@@ -3,6 +3,8 @@ package me.kumo.ui.control.filter;
 import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.hanshsieh.pixivj.model.Tag;
 import com.github.weisj.darklaf.components.text.SearchTextFieldWithHistory;
+import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
+import com.github.weisj.darklaf.components.tristate.TristateState;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.components.IconButton;
 import me.kumo.io.Icons;
@@ -21,6 +23,8 @@ public class SearchFilter extends Box implements IllustrationFilter, ActionListe
     private final JCheckBox ignoreCase;
     private final JCheckBox searchInAuthor;
     private final ControlPane controlPane;
+    private final TristateCheckBox select;
+    private final IconButton copyBtn;
     private String filter = "";
 
     public SearchFilter(ControlPane controlPane) {
@@ -45,6 +49,18 @@ public class SearchFilter extends Box implements IllustrationFilter, ActionListe
 
         add(new JCheckBox("Tools", false) {{
             addActionListener(e -> controlPane.setToolsShown(isSelected()));
+        }});
+        add(copyBtn = new IconButton(AllIcons.Action.Copy.get(), e -> {
+            controlPane.getGalleryManager().gallery.copySelected();
+        }));
+        add(select = new TristateCheckBox("Select") {{
+            addChangeListener(e -> {
+                TristateState state = getState();
+                copyBtn.setVisible(state != TristateState.DESELECTED);
+                controlPane.getGalleryManager().gallery.setShowSelect(state != TristateState.DESELECTED);
+                if (state == TristateState.SELECTED)
+                    controlPane.getGalleryManager().gallery.setSelectAll(true);
+            });
         }});
         add(new IconButton(Icons.down.get(), e -> {
             controlPane.setAdvancedControls(!controlPane.isAdvancedControls());

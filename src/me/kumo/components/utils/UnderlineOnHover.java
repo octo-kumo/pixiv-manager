@@ -1,10 +1,9 @@
 package me.kumo.components.utils;
 
-import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
-import java.util.Map;
+import java.util.HashMap;
 
 public class UnderlineOnHover implements MouseListener {
     private final int mask;
@@ -35,18 +34,16 @@ public class UnderlineOnHover implements MouseListener {
     @Override
     public void mouseEntered(MouseEvent e) {
         if ((e.getModifiersEx() & mask) == mask) {
-            Font font = e.getComponent().getFont();
-            Map attributes = font.getAttributes();
+            HashMap<TextAttribute, Object> attributes = new HashMap<>();
             attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-            e.getComponent().setFont(font.deriveFont(attributes));
+            e.getComponent().setFont(e.getComponent().getFont().deriveFont(attributes));
         }
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-        Font font = e.getComponent().getFont();
-        Map attributes = font.getAttributes();
+        HashMap<TextAttribute, Object> attributes = new HashMap<>();
         attributes.put(TextAttribute.UNDERLINE, -1);
-        e.getComponent().setFont(font.deriveFont(attributes));
+        e.getComponent().setFont(e.getComponent().getFont().deriveFont(attributes));
     }
 }

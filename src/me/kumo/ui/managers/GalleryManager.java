@@ -21,7 +21,7 @@ public class GalleryManager extends JPanel implements Refreshable<List<Illustrat
 
     public GalleryManager() {
         super(new BorderLayout());
-        add(filter = new ControlPane(this, this), BorderLayout.NORTH);
+        add(filter = new ControlPane(this), BorderLayout.NORTH);
         add(gallery = new Gallery(), BorderLayout.CENTER);
     }
 
@@ -52,6 +52,7 @@ public class GalleryManager extends JPanel implements Refreshable<List<Illustrat
 
     public void append(List<Illustration> illustrations) {
         if (this.illustrations == null) this.illustrations = new ArrayList<>();
+        illustrations = illustrations.stream().filter(i -> this.illustrations.stream().noneMatch(I -> I.getId().equals(i.getId()))).toList();
         this.illustrations.addAll(illustrations);
         filter.refresh(this.illustrations);
         gallery.append(filter.filterAndSort(illustrations));

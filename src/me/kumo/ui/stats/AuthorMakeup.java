@@ -50,7 +50,7 @@ public class AuthorMakeup extends JPanel {
                     if (e.getClickCount() == 2) {
                         int selectedIndex = getSelectedIndex();
                         if (selectedIndex != -1)
-                            NetIO.open(URI.create("https://pixiv.net/users/" + finalAuthors.get(selectedIndex).getId()));
+                            NetIO.openURL(URI.create("https://pixiv.net/users/" + finalAuthors.get(selectedIndex).getId()));
                     }
                 }
             });

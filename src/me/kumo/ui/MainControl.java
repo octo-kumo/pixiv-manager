@@ -1,6 +1,7 @@
 package me.kumo.ui;
 
 import com.github.weisj.darklaf.iconset.AllIcons;
+import me.kumo.components.utils.StartAndStoppable;
 import me.kumo.io.Icons;
 import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.managers.*;
@@ -16,12 +17,14 @@ public class MainControl extends JTabbedPane implements WindowFocusListener {
     private final BookmarkManager bookmarks;
     private final FeedManager feeds;
     private final SearchManager search;
+    private final ExtraManager extra;
 
     public MainControl(Pixiv pixiv) {
         addTab("Recommended", AllIcons.Navigation.Glue.Vertical.get(), recommended = new RecommendManager(pixiv));
         addTab("Feed", AllIcons.Misc.Palette.get(), feeds = new FeedManager(pixiv));
         addTab("Bookmarks", Icons.heart.get(), bookmarks = new BookmarkManager(pixiv));
         addTab("Search", AllIcons.Action.Search.get(), search = new SearchManager(pixiv));
+        addTab("Extra", AllIcons.Action.Delete.get(), extra = new ExtraManager(bookmarks, pixiv));
 //        addTab("Browser", AllIcons.Action.Search.get(), editorPane = new JXEditorPane());
 
         addChangeListener(e -> updateTabs());
@@ -49,8 +52,7 @@ public class MainControl extends JTabbedPane implements WindowFocusListener {
     private void updateTabs() {
         for (int i = 0; i < getTabCount(); i++) {
             Component component = getComponentAt(i);
-            if (!(component instanceof GalleryManager man)) return;
-            System.out.println(man.getClass());
+            if (!(component instanceof StartAndStoppable man)) return;
             if (getSelectedIndex() == i) man.start();
             else man.stop();
         }

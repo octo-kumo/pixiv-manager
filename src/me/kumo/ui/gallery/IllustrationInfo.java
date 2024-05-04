@@ -123,13 +123,13 @@ public class IllustrationInfo extends JPanel {
     public void setIllustration(Illustration illustration) {
         this.illustration = illustration;
         id.setText(String.valueOf(illustration.getId()));
-        bookmarks.setText(String.valueOf(illustration.getTotalBookmarks()));
-        views.setText(String.valueOf(illustration.getTotalView()));
-        datetime.setText(PRETTY.format(illustration.getCreateDate()));
-        author.setText(illustration.getUser().getName() + (illustration.getUser().isFollowed() ? " \u2713" : ""));
-        imageSize.setText(illustration.getWidth() + "\u00D7" + illustration.getHeight());
-        r18.setVisible(illustration.getXRestrict() != 0);
-        sanity.setText(String.valueOf(illustration.getSanityLevel()));
+        bookmarks.setText(illustration.getTotalBookmarks() == null ? "" : String.valueOf(illustration.getTotalBookmarks()));
+        views.setText(illustration.getTotalView() == null ? "" : String.valueOf(illustration.getTotalView()));
+        datetime.setText(illustration.getCreateDate() == null ? "" : PRETTY.format(illustration.getCreateDate()));
+        author.setText(illustration.getUser() == null ? "" : illustration.getUser().getName() + (illustration.getUser().isFollowed() ? " \u2713" : ""));
+        imageSize.setText(illustration.getWidth() == null || illustration.getHeight() == null ? "" : illustration.getWidth() + "\u00D7" + illustration.getHeight());
+        r18.setVisible(illustration.getXRestrict() != null && illustration.getXRestrict() != 0);
+        sanity.setText(illustration.getSanityLevel() == null ? "" : String.valueOf(illustration.getSanityLevel()));
         pageNumber.setVisible(illustration.getPageCount() != 1);
         pageNumber.setText("\u00D7" + illustration.getPageCount());
 

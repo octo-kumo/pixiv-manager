@@ -2,6 +2,7 @@ package me.kumo;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.LocalGallery;
+import me.kumo.ui.gallery.Gallery;
 import me.kumo.ui.managers.GalleryManager;
 import me.kumo.ui.stats.AuthorMakeup;
 
@@ -11,17 +12,38 @@ import java.util.ArrayList;
 public class PixivMenu extends JMenuBar {
     public PixivMenu(PixivManager manager) {
         add(new JMenu("View") {{
-            add(new JCheckBoxMenuItem("Leaderboard") {{
+            add(new JCheckBoxMenuItem("Leaderboard", true) {{
                 addActionListener(e -> manager.getControls().getFeeds().setShowRanked(isSelected()));
             }});
+            add(new JCheckBoxMenuItem("Debug", PixivManager.preferences.getBoolean("debug", false)) {{
+                Gallery.DEBUG = isSelected();
+                addActionListener(e -> {
+                    PixivManager.preferences.putBoolean("debug", isSelected());
+                    Gallery.DEBUG = isSelected();
+                });
+            }});
         }});
-        add(new JMenu("Pixiv") {{
+        add(new JMenu("Setting") {{
             add(new JMenuItem("Token") {{
                 addActionListener(e -> manager.askForToken(true));
             }});
+            add(new JCheckBoxMenuItem("Proxy") {{
+                setSelected(PixivManager.getProxy() != null);
+                addActionListener(e -> {
+                    if (isSelected()) {
+                        String proxy = JOptionPane.showInputDialog(this, "Proxy Url (without protocol)");
+                        PixivManager.setProxy(proxy);
+                        JOptionPane.showMessageDialog(this, "Restart is needed to take effect!");
+                    } else
+                        PixivManager.setProxy(null);
+                });
+            }});
+            add(new JMenuItem("Grid Size") {{
+                addActionListener(e -> manager.askForSize());
+            }});
         }});
-        add(new JMenu("Stats") {{
-            add(new JMenuItem("Author") {{
+        add(new JMenu("Info") {{
+            add(new JMenuItem("Author Follow Stats") {{
                 addActionListener(e -> {
                     GalleryManager tab = manager.getControls().getCurrentManager();
                     if (tab != null) {
@@ -39,6 +61,7 @@ public class PixivMenu extends JMenuBar {
             }});
         }});
         add(new JMenu("Tools") {{
+
             add(new JMenuItem("GC") {{
                 addActionListener(e -> System.gc());
             }});

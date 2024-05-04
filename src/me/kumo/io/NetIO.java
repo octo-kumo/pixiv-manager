@@ -124,6 +124,23 @@ public class NetIO {
         }
     }
 
+    public static void downloadImage(Pixiv pixiv, String url, File path, ProgressTracker.ProgressListener listener) throws PixivException, IOException {
+        Response download = pixiv.download(url);
+        if (download.isSuccessful() && download.body() != null) {
+            long targetSize = download.body().contentLength();
+            try (InputStream in = download.body().byteStream();
+                 ProgressInputStream in2 = new ProgressInputStream(in, targetSize);
+                 ByteArrayOutputStream os = new ByteArrayOutputStream();
+                 FileOutputStream fs = new FileOutputStream(path)) {
+                in2.getTracker().addProgressListener(listener);
+                in2.transferTo(os);
+                fs.write(os.toByteArray());
+                fs.flush();
+            }
+            download.close();
+        }
+    }
+
     public static boolean downloadIllustration(Pixiv pixiv, Illustration illustration, ProgressTracker.ProgressListener listener) {
         try {
             if (downloading.contains(illustration.getId())) return false;
@@ -170,7 +187,7 @@ public class NetIO {
         return l;
     }
 
-    public static void open(URI uri) {
+    public static void openURL(URI uri) {
         try {
             Desktop.getDesktop().browse(uri);
         } catch (IOException e) {
@@ -178,9 +195,9 @@ public class NetIO {
         }
     }
 
-    public static void open(Illustration illustration) {
+    public static void openURL(Illustration illustration) {
         if (illustration == null) return;
-        open(URI.create("https://pixiv.net/artworks/" + illustration.getId()));
+        openURL(URI.create("https://pixiv.net/artworks/" + illustration.getId()));
     }
 
     public static void openFile(Illustration illustration) {
@@ -192,8 +209,22 @@ public class NetIO {
         }
     }
 
+    public static void openFile(File file) {
+        if (file == null) return;
+        try {
+            Desktop.getDesktop().open(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void copyFile(Illustration illustration) {
         FileTransferable ft = new FileTransferable(List.of(LocalGallery.getImage(illustration.getId())));
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) -> System.out.println("Lost ownership"));
+    }
+
+    public static void copyFiles(List<Illustration> illustrations) {
+        FileTransferable ft = new FileTransferable(illustrations.stream().map(illustration -> LocalGallery.getImage(illustration.getId())).toList());
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) -> System.out.println("Lost ownership"));
     }
 }

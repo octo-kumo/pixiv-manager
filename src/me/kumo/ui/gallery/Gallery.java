@@ -5,6 +5,7 @@ import com.github.weisj.darklaf.components.OverlayScrollPane;
 import me.kumo.components.utils.Formatters;
 import me.kumo.components.utils.SmoothScroll;
 import me.kumo.components.utils.StartAndStoppable;
+import me.kumo.io.NetIO;
 import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.Refreshable;
 import me.tongfei.progressbar.ProgressBar;
@@ -13,22 +14,22 @@ import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.HardwareAbstractionLayer;
 
+import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Gallery extends OverlayScrollPane implements Refreshable<List<Illustration>>, Iterable<GalleryItem>, ActionListener, StartAndStoppable {
     private static final SystemInfo SI = new SystemInfo();
     private static final HardwareAbstractionLayer HAL = SI.getHardware();
     private static final CentralProcessor CPU = HAL.getProcessor();
+    public static boolean DEBUG = false;
     public final JPanel grid;
     protected final ConcurrentHashMap<Long, GalleryItem> holderMap = new ConcurrentHashMap<>();
     private final Stack<GalleryItem> usedPool = new Stack<>();
@@ -39,6 +40,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     private int colCount;
     private SwingWorker<Object, Object> worker;
     private long last_frame_nanos = 0;
+    private boolean showSelect = false;
 
     public Gallery() {
         super(null, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -151,6 +153,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     public GalleryItem getRefreshOrCreate(Illustration illustration) {
         GalleryItem holder = holderMap.computeIfAbsent(illustration.getId(), i -> new GalleryItem());
         holder.refresh(illustration);
+        holder.setShowSelected(showSelect);
         return holder;
     }
 
@@ -158,7 +161,7 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        drawDebug(g);
+        if (DEBUG) drawDebug(g);
     }
 
     private void drawDebug(Graphics g) {
@@ -232,5 +235,33 @@ public class Gallery extends OverlayScrollPane implements Refreshable<List<Illus
 
     public void stop() {
         timer.stop();
+    }
+
+    public boolean isShowSelect() {
+        return showSelect;
+    }
+
+    public void setShowSelect(boolean showSelect) {
+        this.showSelect = showSelect;
+        for (Component c : grid.getComponents()) {
+            if (!(c instanceof GalleryItem item)) continue;
+            item.setSelected(false);
+            item.setShowSelected(showSelect);
+        }
+    }
+
+    public void setSelectAll(boolean select) {
+        for (Component c : grid.getComponents()) {
+            if (!(c instanceof GalleryItem item)) continue;
+            item.setSelected(select);
+        }
+    }
+
+    public List<GalleryItem> getSelected() {
+        return Arrays.stream(grid.getComponents()).filter(c -> c instanceof GalleryItem item && item.isSelected()).map(e -> (GalleryItem) e).toList();
+    }
+
+    public void copySelected() {
+        NetIO.copyFiles(getSelected().stream().map(GalleryItem::getIllustration).toList());
     }
 }

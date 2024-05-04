@@ -23,25 +23,30 @@ import java.util.concurrent.TimeUnit;
 
 public class Downloader {
     public static void main(String... args) throws IOException {
-        System.getProperties().put("proxySet", "true");
-        System.getProperties().put("socksProxyHost", "127.0.0.1");
-        System.getProperties().put("socksProxyPort", "1080");
+        if (PixivManager.getProxy() != null) {
+            String[] p = PixivManager.getProxy().split(":");
+            if (p.length > 1) {
+                System.getProperties().put("proxySet", "true");
+                System.getProperties().put("socksProxyHost", p[0]);
+                System.getProperties().put("socksProxyPort", p[1]);
+            }
+        }
         Pixiv pixiv = new Pixiv();
         pixiv.setToken(PixivManager.getTokenOrNothing(false));
         LocalGallery.setPath(PixivManager.getPathOrNothing(false));
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
         ArrayList<Illustration> bookmarks = new ArrayList<>(List.of(JsonUtils.GSON.fromJson(new FileReader(BookmarkManager.PATH, StandardCharsets.UTF_8), Illustration[].class)));
-
-        try (ProgressBar bar = new ProgressBar("Download Bookmarks", bookmarks.size())) {
+        try (ProgressBar bar = new ProgressBar("Download Bookmarks", bookmarks.size());
+             ProgressBar dbar = new ProgressBar("Fetch", 0)) {
             for (Illustration illustration : bookmarks) {
                 executorService.submit(() -> {
                     try {
                         if (illustration.getPageCount() > 1) {
                             for (MetaPage metaPage : illustration.getMetaPages()) {
-                                download(LocalGallery.getBestQuality(metaPage.getImageUrls()));
+                                download(LocalGallery.getBestQuality(metaPage.getImageUrls()), dbar);
                             }
                         } else {
-                            download(illustration.getMetaSinglePage().getOriginalImageUrl());
+                            download(illustration.getMetaSinglePage().getOriginalImageUrl(), dbar);
                         }
                         bar.step();
                         bar.refresh();
@@ -57,16 +62,19 @@ public class Downloader {
         }
     }
 
-    public static void download(String url) throws InterruptedException {
+    public static void download(String url, ProgressBar bar) throws InterruptedException {
         String name = url.substring(url.lastIndexOf('/') + 1);
         File file = LocalGallery.getImage(name);
         if (file == null) throw new AssertionError();
         if (file.exists()) return;
         try {
-            NetIO.downloadImage(Pixiv.getInstance(), url, file);
+            NetIO.downloadImage(Pixiv.getInstance(), url, file, e -> {
+                bar.stepTo(e.getProgress());
+                bar.maxHint(e.getTotal());
+                bar.setExtraMessage(name);
+            });
         } catch (PixivException | IOException e) {
-            file.delete();
-            throw new RuntimeException(e);
+            if (file.exists() && !file.delete()) throw new RuntimeException(e);
         }
     }
 }

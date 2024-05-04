@@ -30,6 +30,7 @@ public class BookmarkManager extends GalleryManager {
 
     public static final String PATH = "bookmarks.json";
     private final Pixiv pixiv;
+
     private final ArrayList<Illustration> bookmarks;
     private LoadingIndicator indicator;
     private JLabel countLabel;
@@ -107,7 +108,7 @@ public class BookmarkManager extends GalleryManager {
 
     public ArrayList<Illustration> loadAllBookmarks(Consumer<ArrayList<Illustration>> updater) throws PixivException, IOException {
         AtomicReference<String> nextUrl = new AtomicReference<>(null);
-        long stopAt = bookmarks.size() > 0 ? bookmarks.get(0).getId() : -1;
+        long stopAt = !bookmarks.isEmpty() ? bookmarks.get(0).getId() : -1;
         int counter = 0;
         do {
             List<Illustration> bunch = loadBookmarks(nextUrl, stopAt);
@@ -162,5 +163,9 @@ public class BookmarkManager extends GalleryManager {
     public void refresh(List<Illustration> illustrations) {
         super.refresh(illustrations);
         countLabel.setText(illustrations.size() + " shown");
+    }
+
+    public ArrayList<Illustration> getBookmarks() {
+        return bookmarks;
     }
 }

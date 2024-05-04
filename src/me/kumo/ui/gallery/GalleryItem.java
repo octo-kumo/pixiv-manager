@@ -1,6 +1,7 @@
 package me.kumo.ui.gallery;
 
 import com.github.hanshsieh.pixivj.model.Illustration;
+import com.github.weisj.darklaf.components.border.DarkBorders;
 import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.components.IconButton;
@@ -15,6 +16,8 @@ import me.kumo.ui.Refreshable;
 import me.kumo.ui.viewer.IllustrationViewer;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -26,21 +29,27 @@ import java.util.stream.Collectors;
 
 public class GalleryItem extends JPanel implements MouseListener, Refreshable<Illustration>, MouseMotionListener {
     public static final int MOUSE_DRAG_TOLERANCE = 25;
+    private static boolean _global_on_drag = false;
+    private static boolean _on_drag_set_to = false;
     public final GalleryImage image;
     private final ItemToolbar controls;
     protected IllustrationInfo info;
     private Illustration illustration;
     private MouseEvent mouseDownEvent;
     private boolean shown;
+    private boolean selected = false;
 
     static {
         ToolTipManager.sharedInstance().setInitialDelay(1000);
     }
 
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE);
+    }
+
     public GalleryItem() {
         setLayout(new OverlayLayout(this));
-
-        setPreferredSize(new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE));
         setTransferHandler(new GalleryItemHandler());
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -69,7 +78,8 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         updateImage();
         info.setIllustration(illustration);
         controls.refresh(illustration);
-        setToolTipText(String.format("<html><body><h3><ruby>%s<rt><code>%d</code></rt></ruby></h3><p>%s</p><p>%s</p><p><b>%s</b></p></body></html>", illustration.getTitle(), illustration.getId(), illustration.getCaption(), illustration.getTags().stream().map(t -> "#" + t.getName()).collect(Collectors.joining(" ")), illustration.getUser().getAccount()));
+        if (illustration.getCaption() != null && illustration.getTags() != null && illustration.getUser() != null)
+            setToolTipText(String.format("<html><body><h3><ruby>%s<rt><code>%d</code></rt></ruby></h3><p>%s</p><p>%s</p><p><b>%s</b></p></body></html>", illustration.getTitle(), illustration.getId(), illustration.getCaption(), illustration.getTags().stream().map(t -> "#" + t.getName()).collect(Collectors.joining(" ")), illustration.getUser().getAccount()));
     }
 
     public boolean isShown() {
@@ -92,7 +102,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
     public void updateImage() {
         File file = LocalGallery.getImage(illustration.getId());
-        if (!Objects.equals(illustration.getImageUrls().getMedium(), "https://s.pximg.net/common/images/limit_unknown_360.png"))
+        if (illustration.getImageUrls() != null && !Objects.equals(illustration.getImageUrls().getMedium(), "https://s.pximg.net/common/images/limit_unknown_360.png"))
             this.image.setUrl(illustration.getImageUrls().getMedium());
         this.image.setLocalFile(file);
 //        this.image.setBlurred(illustration.getXRestrict() != 0);
@@ -104,14 +114,22 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
 
     @Override
     public void mousePressed(MouseEvent e) {
-        image.setPressed(true);
+        image.setPressed(_global_on_drag = true);
         mouseDownEvent = e;
+        if (isShowingSelect() && !e.isControlDown()) {
+            setSelected(_on_drag_set_to = !isSelected());
+        } else if (!isShowingSelect() && e.isControlDown()) {
+            // activate select mode
+            if (!(this.getParent().getParent().getParent().getParent() instanceof Gallery gallery)) return;
+            gallery.setShowSelect(true);
+            setSelected(true);
+        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        image.setPressed(false);
-        if (mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) < MOUSE_DRAG_TOLERANCE)
+        image.setPressed(_global_on_drag = false);
+        if (!isShowingSelect() && mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) < MOUSE_DRAG_TOLERANCE)
             IllustrationViewer.show(SwingUtilities.getWindowAncestor(this), illustration, image.getImage());
     }
 
@@ -119,6 +137,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     public void mouseEntered(MouseEvent e) {
         image.setHover(true);
         controls.bar1.setVisible(true);
+        if (isShowingSelect() && _global_on_drag) setSelected(_on_drag_set_to);
     }
 
     @Override
@@ -132,7 +151,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     @Override
     public void mouseDragged(MouseEvent e) {
         image.setParallax(-e.getX() * 2d / getWidth() + 1, -e.getY() * 2d / getHeight() + 1);
-        if (mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) > MOUSE_DRAG_TOLERANCE) {
+        if (!isShowingSelect() && mouseDownEvent != null && e.getPoint().distance(mouseDownEvent.getPoint()) > MOUSE_DRAG_TOLERANCE) {
             image.setPressed(false);
             JComponent c = (JComponent) e.getSource();
             TransferHandler handler = c.getTransferHandler();
@@ -147,9 +166,28 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
         image.setParallax(-e.getX() * 2d / getWidth() + 1, -e.getY() * 2d / getHeight() + 1);
     }
 
+    public void setShowSelected(boolean showSelected) {
+        controls.select.setVisible(showSelected);
+    }
+
+    private boolean isShowingSelect() {
+        return controls.select.isVisible();
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+        controls.select.setSelected(selected);
+        setBorder(selected ? new CompoundBorder(new EmptyBorder(10, 10, 10, 10), DarkBorders.createLineBorder(1, 1, 1, 1)) : null);
+    }
+
     private class ItemToolbar extends JPanel implements Refreshable<Illustration> {
         private final JPanel bar1;
         private final JPanel bar2;
+        private JCheckBox select;
         private IconButton bookmark;
         private IconButton refresh;
         private IconButton file;
@@ -167,7 +205,10 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             add(bar2 = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0)) {{
                 setOpaque(false);
-
+                add(select = new JCheckBox("", selected) {{
+                    setVisible(false);
+                    addActionListener(e -> GalleryItem.this.setSelected(isSelected()));
+                }});
                 add(refreshProgress = new LoadingIndicator(Icons.download.get()) {{
                     setVisible(false);
                 }});
@@ -188,7 +229,7 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
             add(bar1 = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0)) {{
                 setOpaque(false);
                 setVisible(false);
-                add(new IconButton(Icons.pixiv.get(), e -> NetIO.open(illustration)));
+                add(new IconButton(Icons.pixiv.get(), e -> NetIO.openURL(illustration)));
                 add(copy = new IconButton(AllIcons.Action.Copy.get(), e -> NetIO.copyFile(illustration)));
                 add(file = new IconButton(AllIcons.Files.Image.get(), e -> NetIO.openFile(illustration)));
             }});

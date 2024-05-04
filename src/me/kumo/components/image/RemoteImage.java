@@ -141,7 +141,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
     }
 
     public boolean isThumbnailValid(int w, int h) {
-        double ratio = Math.max(getWidth() * 1d / w, getHeight() * 1d / h);
+        double ratio = Math.max(getWidth() * 2d / w, getHeight() * 2d / h);
         return !(ratio > 1.5 || (1 / ratio) > 1.5);
     }
 
@@ -179,8 +179,11 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
                     return Objects.requireNonNull(ImageIO.read(input));
                 } catch (IIOException ignored) {
                     System.out.println("Corrupted Image : " + localFile.getAbsolutePath());
+                } catch (NullPointerException e) {
+                    System.out.println("Empty Image : " + localFile.getAbsolutePath());
                 } catch (Exception e) {
                     e.printStackTrace();
+                    System.out.println("? Image : " + localFile.getAbsolutePath());
                     System.out.println(localFile.toString());
                 }
             }
@@ -212,7 +215,7 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
         private @Nullable BufferedImage getImage() throws PixivException, IOException {
             BufferedImage bigImage = loadImage();
             if (bigImage == null) return null;
-            BufferedImage thumbnail = shouldMakeThumbnail() ? ImageUtils.downScale(bigImage, getWidth(), getHeight()) : bigImage;
+            BufferedImage thumbnail = shouldMakeThumbnail() ? ImageUtils.downScale(bigImage, 2 * getWidth(), 2 * getHeight()) : bigImage;
             if (shouldMakeThumbnail()) {
                 cacheThumbnail(thumbnail);
                 bigImage.flush();
@@ -244,11 +247,10 @@ public abstract class RemoteImage extends JComponent implements ProgressTracker.
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof SocketTimeoutException
                         || e.getCause() instanceof SocketException
-                        || e.getCause().getCause() instanceof SocketException) {
-                    failedToLoad = true;
-                } else if (e.getCause() instanceof IIOException) {
-                    System.out.println("Corrupt File " + localFile);
-                } else throw new RuntimeException(e);
+                        || e.getCause().getCause() instanceof SocketException) failedToLoad = true;
+                else if (e.getCause() instanceof IIOException) System.out.println("Corrupt File (IIO) " + localFile);
+                else if (e.getCause() instanceof EOFException) System.out.println("Corrupt File (EOF) " + localFile);
+                throw new RuntimeException(e);
             }
         }
     }

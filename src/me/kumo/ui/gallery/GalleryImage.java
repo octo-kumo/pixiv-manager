@@ -8,7 +8,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class GalleryImage extends RemoteImage {
-    public static final int GRID_SIZE = 200;
+    public static int GRID_SIZE = 200;
     private static final double DECAY_RATE = 0.1;
     private static final double DECAY_RATE_I = 1 - DECAY_RATE;
     private static final double PARALLAX_AMOUNT = 20;
@@ -22,8 +22,12 @@ public class GalleryImage extends RemoteImage {
     private boolean hover, pressed;
     private long hoverChangeTime, pressedChangeTime;
 
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE);
+    }
+
     public GalleryImage() {
-        setPreferredSize(new Dimension(GRID_SIZE, GRID_SIZE));
     }
 
     @Override
@@ -74,8 +78,8 @@ public class GalleryImage extends RemoteImage {
     }
 
     public void setParallax(double x, double y) {
-        this.tpx = x;
-        this.tpy = y;
+        this.tpx = Math.min(Math.max(1.5 * x, -1), 1);
+        this.tpy = Math.min(Math.max(1.5 * y, -1), 1);
     }
 
     public void setRestParallax(double x, double y) {

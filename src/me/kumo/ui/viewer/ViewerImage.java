@@ -4,6 +4,7 @@ import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.components.image.RemoteImage;
 import me.kumo.components.utils.Formatters;
 import me.kumo.io.LocalGallery;
+import me.kumo.io.NetIO;
 import me.kumo.io.ProgressTracker;
 
 import javax.swing.*;
@@ -44,7 +45,7 @@ public class ViewerImage extends RemoteImage implements MouseMotionListener, Mou
         setLocalFile(file == null ? this.thumbnailFile : file);
         this.preload = thumb;
         addPropertyChangeListener(THUMBNAIL, evt -> {
-            if (file.exists()) size = file.length();
+            if (file != null && file.exists()) size = file.length();
             if (evt.getNewValue() != null && evt.getNewValue() instanceof BufferedImage image) {
                 new SwingWorker<>() {
                     @Override
@@ -178,9 +179,13 @@ public class ViewerImage extends RemoteImage implements MouseMotionListener, Mou
     @Override
     public void mouseClicked(MouseEvent e) {
         if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-            offset.setLocation(0, 0);
-            setScale(1);
-            repaint();
+            if (scale != 1) {
+                offset.setLocation(0, 0);
+                setScale(1);
+                repaint();
+            } else {
+                NetIO.openFile(this.getLocalFile());
+            }
         }
     }
 

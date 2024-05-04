@@ -60,4 +60,8 @@ Then I added more functions to help me find images I want.
 
 ## Running it
 
+Requires your pixiv refresh token.
+
 Requires a custom fork of pixivj, maybe I will try to remove this dependency in the future.
+
+(Cloning this repository does not mean you can run it)
