@@ -1,6 +1,5 @@
 package me.kumo.ui.control;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.control.filter.OptionFilter;
@@ -8,6 +7,7 @@ import me.kumo.ui.control.filter.SearchFilter;
 import me.kumo.ui.control.filter.TagFilter;
 import me.kumo.ui.control.filter.ToolFilter;
 import me.kumo.ui.managers.GalleryManager;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;

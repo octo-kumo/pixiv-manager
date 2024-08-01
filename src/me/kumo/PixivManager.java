@@ -38,6 +38,7 @@ public class PixivManager extends JFrame {
         LafManager.install(LafManager.themeForPreferredStyle(LafManager.getPreferredThemeStyle()));
         Toolkit.getDefaultToolkit().setDynamicLayout(false);
         LocalGallery.setPath(getPathOrNothing(false));
+        Version.checkForUpdates();
         GalleryImage.GRID_SIZE = preferences.getInt(GRID_SIZE, 200);
         if (PixivManager.getProxy() != null) {
             String[] p = PixivManager.getProxy().split(":");
@@ -88,6 +89,12 @@ public class PixivManager extends JFrame {
         return galleryPath;
     }
 
+    public static int getSizeOrNothing() {
+        String size = preferences.get(GRID_SIZE, String.valueOf(GalleryImage.GRID_SIZE));
+        size = (String) JOptionPane.showInputDialog(null, "Size of the gallery grid cells", "Change Grid Size", JOptionPane.QUESTION_MESSAGE, AllIcons.Dialog.Question.get(), null, size);
+        return size == null ? GalleryImage.GRID_SIZE : Integer.parseInt(size);
+    }
+
     public MainControl getControls() {
         return controls;
     }
@@ -104,12 +111,6 @@ public class PixivManager extends JFrame {
             preferences.put(PIXIV_TOKEN, pixivToken);
             Pixiv.getInstance().setToken(pixivToken);
         }
-    }
-
-    public static int getSizeOrNothing() {
-        String size = preferences.get(GRID_SIZE, String.valueOf(GalleryImage.GRID_SIZE));
-        size = (String) JOptionPane.showInputDialog(null, "Size of the gallery grid cells", "Change Grid Size", JOptionPane.QUESTION_MESSAGE, AllIcons.Dialog.Question.get(), null, size);
-        return size == null ? GalleryImage.GRID_SIZE : Integer.parseInt(size);
     }
 
     public void askForSize() {

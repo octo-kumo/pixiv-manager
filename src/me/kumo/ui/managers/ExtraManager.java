@@ -1,6 +1,5 @@
 package me.kumo.ui.managers;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.components.utils.StartAndStoppable;
@@ -8,6 +7,7 @@ import me.kumo.io.LocalGallery;
 import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.gallery.Gallery;
 import me.kumo.ui.gallery.GalleryItem;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.awt.*;

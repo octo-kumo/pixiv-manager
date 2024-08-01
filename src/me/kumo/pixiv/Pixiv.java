@@ -1,17 +1,12 @@
 package me.kumo.pixiv;
 
-import com.github.hanshsieh.pixivj.api.PixivApiClient;
-import com.github.hanshsieh.pixivj.exception.AuthException;
-import com.github.hanshsieh.pixivj.exception.PixivException;
-import com.github.hanshsieh.pixivj.model.IllustDetail;
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.SearchedIllusts;
-import com.github.hanshsieh.pixivj.oauth.PixivOAuthClient;
-import okhttp3.FormBody;
-import okhttp3.HttpUrl;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import pixivj.api.PixivApiClient;
+import pixivj.exception.AuthException;
+import pixivj.exception.PixivException;
+import pixivj.model.IllustDetail;
+import pixivj.model.Illustration;
+import pixivj.oauth.PixivOAuthClient;
 
 import javax.net.ssl.SSLException;
 import javax.swing.*;

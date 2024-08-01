@@ -1,8 +1,8 @@
 package me.kumo.ui.viewer;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.components.utils.MathUtils;
 import me.kumo.pixiv.Pixiv;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.awt.*;

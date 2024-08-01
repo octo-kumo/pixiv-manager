@@ -1,7 +1,5 @@
 package me.kumo.ui.viewer;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.Tag;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.components.border.DarkBorders;
 import me.kumo.components.utils.UnderlineOnHover;
@@ -13,6 +11,8 @@ import me.kumo.pixiv.FollowWorker;
 import me.kumo.pixiv.IllustUpdateListener;
 import me.kumo.ui.artist.ArtistManager;
 import org.jdesktop.swingx.plaf.basic.core.BasicTransferable;
+import pixivj.model.Illustration;
+import pixivj.model.Tag;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;

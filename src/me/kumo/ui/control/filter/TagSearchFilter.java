@@ -1,6 +1,5 @@
 package me.kumo.ui.control.filter;
 
-import com.github.hanshsieh.pixivj.model.*;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
 import com.github.weisj.darklaf.components.tristate.TristateState;
@@ -13,6 +12,7 @@ import me.kumo.io.Icons;
 import me.kumo.pixiv.AutocompleteWorker;
 import me.kumo.ui.control.SortPane;
 import me.kumo.ui.managers.SearchManager;
+import pixivj.model.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

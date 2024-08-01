@@ -1,15 +1,15 @@
 package me.kumo.pixiv;
 
-import com.github.hanshsieh.pixivj.model.DeleteBookmark;
-import com.github.hanshsieh.pixivj.model.IllustDetail;
-import com.github.hanshsieh.pixivj.model.Illustration;
+import pixivj.model.DeleteBookmark;
+import pixivj.model.IllustDetail;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.util.function.Consumer;
 
 public class BookmarkWorker extends SwingWorker<Boolean, Illustration> {
-    private Illustration illustration;
     private final Consumer<Boolean> listener;
+    private Illustration illustration;
 
     public BookmarkWorker(Illustration illustration, Consumer<Boolean> listener) {
         this.illustration = illustration;

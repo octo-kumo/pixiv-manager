@@ -1,12 +1,12 @@
 package me.kumo.ui.viewer;
 
-import com.github.hanshsieh.pixivj.model.Comment;
-import com.github.hanshsieh.pixivj.model.IllustCommentsFilter;
-import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.components.border.DarkBorders;
 import me.kumo.components.utils.SmoothScroll;
 import me.kumo.pixiv.Pixiv;
+import pixivj.model.Comment;
+import pixivj.model.IllustCommentsFilter;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.awt.*;
@@ -49,7 +49,7 @@ public class Comments extends OverlayScrollPane {
         worker = new SwingWorker<>() {
             @Override
             protected Object doInBackground() throws Exception {
-                com.github.hanshsieh.pixivj.model.Comments illustComments = Pixiv.getInstance().getIllustComments(filter);
+                pixivj.model.Comments illustComments = Pixiv.getInstance().getIllustComments(filter);
                 List<Comment> newComments = illustComments.getComments();
                 newComments.sort(Comparator.comparing(Comment::getDate, Comparator.reverseOrder()));
                 filter.setIllustId(newComments.get(newComments.size() - 1).getId());

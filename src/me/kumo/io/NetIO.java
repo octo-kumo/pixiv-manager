@@ -1,10 +1,10 @@
 package me.kumo.io;
 
-import com.github.hanshsieh.pixivj.exception.PixivException;
-import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.components.utils.FileTransferable;
 import me.kumo.pixiv.Pixiv;
 import okhttp3.Response;
+import pixivj.exception.PixivException;
+import pixivj.model.Illustration;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.FileImageOutputStream;
@@ -117,7 +117,7 @@ public class NetIO {
         Response download = pixiv.download(url);
         if (download.isSuccessful() && download.body() != null) {
             try (InputStream input = download.body().byteStream();
-                 FileOutputStream os = new FileOutputStream(path);) {
+                 FileOutputStream os = new FileOutputStream(path)) {
                 input.transferTo(os);
             }
             download.close();

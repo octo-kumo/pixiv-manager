@@ -1,7 +1,5 @@
 package me.kumo.io;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.MetaPageImageUrls;
 import com.github.weisj.darklaf.iconset.AllIcons;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -11,6 +9,8 @@ import me.kumo.components.utils.Nullity;
 import me.kumo.image.colorthief.ProminentColor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NonNls;
+import pixivj.model.Illustration;
+import pixivj.model.MetaPageImageUrls;
 
 import javax.swing.*;
 import java.awt.*;
@@ -130,15 +130,8 @@ public class LocalGallery {
         };
     }
 
-    public static class ImageFileFilter implements FilenameFilter {
-        @Override
-        public boolean accept(File dir, String name) {
-            return Arrays.stream(OK_FILE_EXTENSIONS).anyMatch(extension -> name.toLowerCase().endsWith(extension));
-        }
-    }
-
     public static void showCache(Window parent) {
-        JDialog dialog = new JDialog(parent, "Cache");
+        JDialog dialog = new JDialog(parent, "Thumbnail Cache");
         dialog.setContentPane(new CachePopup());
 
         dialog.pack();
@@ -146,16 +139,22 @@ public class LocalGallery {
         dialog.setVisible(true);
     }
 
+    public static class ImageFileFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            return Arrays.stream(OK_FILE_EXTENSIONS).anyMatch(extension -> name.toLowerCase().endsWith(extension));
+        }
+    }
+
     public static class CachePopup extends Box {
-        private final JPanel top;
         private final JLabel fileCount;
         private final JLabel fileSize;
         private final AtomicLong totalSize = new AtomicLong(0);
         private final JProgressBar prog;
-        private SwingWorker<Long, Long> calcWorker;
 
         public CachePopup() {
             super(BoxLayout.Y_AXIS);
+            JPanel top;
             add(top = new JPanel(new FlowLayout()));
             top.add(fileCount = new JLabel(AllIcons.Files.General.get()));
             top.add(fileSize = new JLabel(AllIcons.Files.Folder.get()));
@@ -169,7 +168,10 @@ public class LocalGallery {
             add(new JButton("Clear") {{
                 addActionListener(e -> {
                     Desktop.getDesktop().moveToTrash(RemoteImage.CACHE);
-                    RemoteImage.CACHE.mkdir();
+                    if (RemoteImage.CACHE.mkdir()) {
+                        calcSize();
+                        refresh();
+                    }
                 });
             }});
 
@@ -178,7 +180,7 @@ public class LocalGallery {
         }
 
         private void calcSize() {
-            calcWorker = new SwingWorker<>() {
+            SwingWorker<Long, Long> calcWorker = new SwingWorker<>() {
                 @Override
                 protected Long doInBackground() {
                     totalSize.set(0);

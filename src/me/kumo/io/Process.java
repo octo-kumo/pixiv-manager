@@ -1,7 +1,7 @@
 package me.kumo.io;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.Tag;
+import pixivj.model.Illustration;
+import pixivj.model.Tag;
 
 import java.util.*;
 import java.util.function.Function;

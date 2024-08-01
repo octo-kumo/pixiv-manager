@@ -1,20 +1,19 @@
 package me.kumo.ui.managers;
 
-import com.github.hanshsieh.pixivj.model.SearchedIllusts;
-import com.github.hanshsieh.pixivj.model.SearchedIllustsFilter;
 import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.control.filter.TagSearchFilter;
+import pixivj.model.SearchedIllusts;
+import pixivj.model.SearchedIllustsFilter;
 
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SearchManager extends GalleryManager {
-    public SearchedIllustsFilter lastFilter;
-
     private final Pixiv pixiv;
     private final TagSearchFilter search;
     private final AtomicInteger more = new AtomicInteger();
+    public SearchedIllustsFilter lastFilter;
     private SwingWorker<Object, Object> worker;
     private String searchNextURL;
 

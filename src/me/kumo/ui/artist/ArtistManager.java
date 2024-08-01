@@ -1,11 +1,11 @@
 package me.kumo.ui.artist;
 
-import com.github.hanshsieh.pixivj.model.UserDetail;
-import com.github.hanshsieh.pixivj.model.UserIllustQuery;
-import com.github.hanshsieh.pixivj.model.UserIllusts;
-import com.github.hanshsieh.pixivj.model.UserQuery;
 import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.managers.GalleryManager;
+import pixivj.model.UserDetail;
+import pixivj.model.UserIllustQuery;
+import pixivj.model.UserIllusts;
+import pixivj.model.UserQuery;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +19,7 @@ public class ArtistManager extends GalleryManager {
     private SwingWorker<Object, Object> userWorker;
     private String nextURL;
     private UserDetail detail;
-    private Timer timer;
+    private final Timer timer;
 
     public ArtistManager(Pixiv pixiv, long userID) {
         this.pixiv = pixiv;

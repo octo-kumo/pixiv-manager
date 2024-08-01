@@ -1,6 +1,5 @@
 package me.kumo.ui.gallery;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import me.kumo.components.utils.Formatters;
 import me.kumo.components.utils.SmoothScroll;
@@ -13,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.HardwareAbstractionLayer;
+import pixivj.model.Illustration;
 
 import javax.swing.Timer;
 import javax.swing.*;

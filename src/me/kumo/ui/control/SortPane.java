@@ -1,10 +1,10 @@
 package me.kumo.ui.control;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.color.QuickColorChooser;
 import me.kumo.io.Icons;
 import me.kumo.io.ImageUtils;
 import me.kumo.io.LocalGallery;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.awt.*;

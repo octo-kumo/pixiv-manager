@@ -1,10 +1,10 @@
 package me.kumo.ui.managers;
 
-import com.github.hanshsieh.pixivj.model.*;
 import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.gallery.GalleryItem;
 import me.kumo.ui.gallery.HorizontalGallery;
 import me.kumo.ui.gallery.RankedItem;
+import pixivj.model.*;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,11 +1,11 @@
 package me.kumo.ui.viewer;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.components.image.RemoteImage;
 import me.kumo.components.utils.Formatters;
 import me.kumo.io.LocalGallery;
 import me.kumo.io.NetIO;
 import me.kumo.io.ProgressTracker;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.awt.*;
@@ -238,13 +238,13 @@ public class ViewerImage extends RemoteImage implements MouseMotionListener, Mou
         else loadImage();
     }
 
+    public double getScale() {
+        return scale;
+    }
+
     public void setScale(double scale) {
         this.scale = scale;
         if (this.illust != null) this.illust.setFocus(scale > 1);
-    }
-
-    public double getScale() {
-        return scale;
     }
 
     public void setIllust(IllustrationViewer illust) {

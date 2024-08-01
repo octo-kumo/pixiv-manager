@@ -1,11 +1,11 @@
 package me.kumo.ui.control.filter;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
 import com.github.weisj.darklaf.components.tristate.TristateState;
 import me.kumo.io.LocalGallery;
 import me.kumo.ui.control.ControlPane;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.awt.*;

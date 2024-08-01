@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 public class CsvMap extends HashMap<String, String> {
 
-    private String filename;
+    private final String filename;
 
     public CsvMap(String filename) {
         this.filename = filename;

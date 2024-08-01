@@ -1,13 +1,13 @@
 package me.kumo.pixiv;
 
-import com.github.hanshsieh.pixivj.exception.AuthException;
-import com.github.hanshsieh.pixivj.model.AuthResult;
-import com.github.hanshsieh.pixivj.model.Credential;
-import com.github.hanshsieh.pixivj.model.GrantType;
-import com.github.hanshsieh.pixivj.oauth.PixivOAuthClient;
-import com.github.hanshsieh.pixivj.token.LazyTokenRefresher;
 import org.apache.commons.lang3.Validate;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import pixivj.exception.AuthException;
+import pixivj.model.AuthResult;
+import pixivj.model.Credential;
+import pixivj.model.GrantType;
+import pixivj.oauth.PixivOAuthClient;
+import pixivj.token.LazyTokenRefresher;
 
 import javax.swing.event.EventListenerList;
 import java.io.IOException;

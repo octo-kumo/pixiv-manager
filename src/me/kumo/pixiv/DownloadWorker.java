@@ -1,7 +1,7 @@
 package me.kumo.pixiv;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.ProgressTracker;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.util.concurrent.ExecutionException;

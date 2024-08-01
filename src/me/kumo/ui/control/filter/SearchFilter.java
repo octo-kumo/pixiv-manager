@@ -1,7 +1,5 @@
 package me.kumo.ui.control.filter;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.Tag;
 import com.github.weisj.darklaf.components.text.SearchTextFieldWithHistory;
 import com.github.weisj.darklaf.components.tristate.TristateCheckBox;
 import com.github.weisj.darklaf.components.tristate.TristateState;
@@ -9,6 +7,8 @@ import com.github.weisj.darklaf.iconset.AllIcons;
 import me.kumo.components.IconButton;
 import me.kumo.io.Icons;
 import me.kumo.ui.control.ControlPane;
+import pixivj.model.Illustration;
+import pixivj.model.Tag;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

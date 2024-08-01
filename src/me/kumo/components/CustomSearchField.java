@@ -12,7 +12,7 @@ import java.util.prefs.Preferences;
 
 public class CustomSearchField extends SearchTextFieldWithHistory implements SearchListener {
     private static final Preferences preferences = Preferences.userNodeForPackage(CustomSearchField.class);
-    private ArrayList<String> realHistory = new ArrayList<>();
+    private final ArrayList<String> realHistory = new ArrayList<>();
 
     public CustomSearchField() {
         addSearchListener(this);

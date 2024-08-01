@@ -1,9 +1,9 @@
 package me.kumo.ui.stats;
 
-import com.github.hanshsieh.pixivj.model.Author;
 import com.github.weisj.darklaf.components.OverlayScrollPane;
 import me.kumo.components.piechart.PieChart;
 import me.kumo.io.NetIO;
+import pixivj.model.Author;
 
 import javax.swing.*;
 import java.awt.*;

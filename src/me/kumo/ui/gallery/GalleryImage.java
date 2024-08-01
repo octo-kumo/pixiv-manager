@@ -8,11 +8,10 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class GalleryImage extends RemoteImage {
-    public static int GRID_SIZE = 200;
     private static final double DECAY_RATE = 0.1;
     private static final double DECAY_RATE_I = 1 - DECAY_RATE;
     private static final double PARALLAX_AMOUNT = 20;
-
+    public static int GRID_SIZE = 200;
     private boolean shown = false;
     private boolean blurred = false;
     private double px = 0, py = 0;
@@ -22,12 +21,12 @@ public class GalleryImage extends RemoteImage {
     private boolean hover, pressed;
     private long hoverChangeTime, pressedChangeTime;
 
+    public GalleryImage() {
+    }
+
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE);
-    }
-
-    public GalleryImage() {
     }
 
     @Override

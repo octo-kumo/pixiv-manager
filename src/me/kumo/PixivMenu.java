@@ -1,33 +1,21 @@
 package me.kumo;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.io.LocalGallery;
 import me.kumo.ui.gallery.Gallery;
 import me.kumo.ui.managers.GalleryManager;
 import me.kumo.ui.stats.AuthorMakeup;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import java.util.ArrayList;
 
 public class PixivMenu extends JMenuBar {
     public PixivMenu(PixivManager manager) {
-        add(new JMenu("View") {{
-            add(new JCheckBoxMenuItem("Leaderboard", true) {{
-                addActionListener(e -> manager.getControls().getFeeds().setShowRanked(isSelected()));
-            }});
-            add(new JCheckBoxMenuItem("Debug", PixivManager.preferences.getBoolean("debug", false)) {{
-                Gallery.DEBUG = isSelected();
-                addActionListener(e -> {
-                    PixivManager.preferences.putBoolean("debug", isSelected());
-                    Gallery.DEBUG = isSelected();
-                });
-            }});
-        }});
         add(new JMenu("Setting") {{
-            add(new JMenuItem("Token") {{
+            add(new JMenuItem("Pixiv Token") {{
                 addActionListener(e -> manager.askForToken(true));
             }});
-            add(new JCheckBoxMenuItem("Proxy") {{
+            add(new JCheckBoxMenuItem("Socks Proxy") {{
                 setSelected(PixivManager.getProxy() != null);
                 addActionListener(e -> {
                     if (isSelected()) {
@@ -38,12 +26,29 @@ public class PixivMenu extends JMenuBar {
                         PixivManager.setProxy(null);
                 });
             }});
+            add(new JSeparator());
+            add(new JCheckBoxMenuItem("Show Leaderboard", true) {{
+                addActionListener(e -> manager.getControls().getFeeds().setShowRanked(isSelected()));
+            }});
             add(new JMenuItem("Grid Size") {{
                 addActionListener(e -> manager.askForSize());
             }});
+            add(new JCheckBoxMenuItem("Debug", PixivManager.preferences.getBoolean("debug", false)) {{
+                Gallery.DEBUG = isSelected();
+                addActionListener(e -> {
+                    PixivManager.preferences.putBoolean("debug", isSelected());
+                    Gallery.DEBUG = isSelected();
+                });
+            }});
+            add(new JSeparator());
+            add(new JCheckBoxMenuItem("Auto Update") {{
+                setSelected(Version.shouldAutoUpdate());
+                addActionListener(e -> Version.shouldAutoUpdate(isSelected()));
+            }});
+            add(new JMenuItem(Version.CURRENT.toString()));
         }});
-        add(new JMenu("Info") {{
-            add(new JMenuItem("Author Follow Stats") {{
+        add(new JMenu("Popups") {{
+            add(new JMenuItem("Artist Makeup (current page)") {{
                 addActionListener(e -> {
                     GalleryManager tab = manager.getControls().getCurrentManager();
                     if (tab != null) {
@@ -61,7 +66,6 @@ public class PixivMenu extends JMenuBar {
             }});
         }});
         add(new JMenu("Tools") {{
-
             add(new JMenuItem("GC") {{
                 addActionListener(e -> System.gc());
             }});

@@ -1,6 +1,6 @@
 package me.kumo.ui.control.filter;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
+import pixivj.model.Illustration;
 
 import java.util.stream.Stream;
 

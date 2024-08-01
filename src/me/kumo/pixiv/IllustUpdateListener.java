@@ -1,6 +1,6 @@
 package me.kumo.pixiv;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
+import pixivj.model.Illustration;
 
 import java.util.EventListener;
 import java.util.function.Consumer;

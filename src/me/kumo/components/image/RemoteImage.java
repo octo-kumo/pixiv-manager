@@ -1,12 +1,12 @@
 package me.kumo.components.image;
 
-import com.github.hanshsieh.pixivj.exception.PixivException;
 import me.kumo.io.ImageUtils;
 import me.kumo.io.NetIO;
 import me.kumo.io.ProgressInputStream;
 import me.kumo.io.ProgressTracker;
 import me.kumo.pixiv.Pixiv;
 import org.jetbrains.annotations.Nullable;
+import pixivj.exception.PixivException;
 
 import javax.imageio.IIOException;
 import javax.imageio.ImageIO;

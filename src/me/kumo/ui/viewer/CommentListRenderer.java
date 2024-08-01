@@ -1,10 +1,10 @@
 package me.kumo.ui.viewer;
 
-import com.github.hanshsieh.pixivj.exception.PixivException;
-import com.github.hanshsieh.pixivj.model.Comment;
 import me.kumo.io.ImageUtils;
 import me.kumo.io.NetIO;
 import me.kumo.pixiv.Pixiv;
+import pixivj.exception.PixivException;
+import pixivj.model.Comment;
 
 import javax.swing.*;
 import java.awt.*;
@@ -75,5 +75,4 @@ public class CommentListRenderer implements ListCellRenderer<Comment> {
         }
     }
 
-    ;
 }

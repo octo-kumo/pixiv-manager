@@ -1,12 +1,12 @@
 package me.kumo.ui.gallery;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import me.kumo.components.utils.Formatters;
 import me.kumo.components.utils.UnderlineOnHover;
 import me.kumo.io.Icons;
 import me.kumo.io.LocalGallery;
 import me.kumo.ui.artist.ArtistManager;
 import org.ocpsoft.prettytime.PrettyTime;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,9 +16,8 @@ import java.awt.event.MouseEvent;
 import java.nio.file.Files;
 
 public class IllustrationInfo extends JPanel {
-    private static final PrettyTime PRETTY = new PrettyTime();
-
     public static final Color HALF_TRANSPARENT = new Color(0xaa000000, true);
+    private static final PrettyTime PRETTY = new PrettyTime();
     private JLabel datetime;
     private JLabel fileSize;
     private JLabel sanity;

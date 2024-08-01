@@ -1,17 +1,17 @@
 package me.kumo.ui.managers;
 
-import com.github.hanshsieh.pixivj.exception.APIException;
-import com.github.hanshsieh.pixivj.exception.PixivException;
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.SearchedIllusts;
-import com.github.hanshsieh.pixivj.model.User;
-import com.github.hanshsieh.pixivj.model.V2Filter;
-import com.github.hanshsieh.pixivj.util.JsonUtils;
 import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import me.kumo.io.Icons;
 import me.kumo.io.NetIO;
 import me.kumo.pixiv.Pixiv;
 import me.kumo.ui.gallery.GalleryItem;
+import pixivj.exception.APIException;
+import pixivj.exception.PixivException;
+import pixivj.model.Illustration;
+import pixivj.model.SearchedIllusts;
+import pixivj.model.User;
+import pixivj.model.V2Filter;
+import pixivj.util.JsonUtils;
 
 import javax.swing.*;
 import java.awt.*;

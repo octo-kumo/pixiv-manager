@@ -1,7 +1,7 @@
 package me.kumo.pixiv;
 
-import com.github.hanshsieh.pixivj.model.AuthResult;
 import org.jetbrains.annotations.Nullable;
+import pixivj.model.AuthResult;
 
 import java.util.EventListener;
 

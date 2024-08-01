@@ -1,8 +1,8 @@
 package me.kumo.pixiv;
 
-import com.github.hanshsieh.pixivj.exception.APIException;
-import com.github.hanshsieh.pixivj.model.Autocomplete;
-import com.github.hanshsieh.pixivj.model.SearchedIllustsFilter;
+import pixivj.exception.APIException;
+import pixivj.model.Autocomplete;
+import pixivj.model.SearchedIllustsFilter;
 
 import javax.swing.*;
 import java.util.concurrent.CancellationException;

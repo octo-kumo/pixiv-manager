@@ -1,9 +1,9 @@
 package others;
 
-import com.github.hanshsieh.pixivj.exception.PixivException;
-import com.github.hanshsieh.pixivj.model.Illustration;
-import com.github.hanshsieh.pixivj.model.MetaPage;
-import com.github.hanshsieh.pixivj.util.JsonUtils;
+import pixivj.exception.PixivException;
+import pixivj.model.Illustration;
+import pixivj.model.MetaPage;
+import pixivj.util.JsonUtils;
 import me.kumo.PixivManager;
 import me.kumo.io.CsvMap;
 import me.kumo.io.LocalGallery;

@@ -1,6 +1,5 @@
 package me.kumo.ui.gallery;
 
-import com.github.hanshsieh.pixivj.model.Illustration;
 import com.github.weisj.darklaf.components.border.DarkBorders;
 import com.github.weisj.darklaf.components.loading.LoadingIndicator;
 import com.github.weisj.darklaf.iconset.AllIcons;
@@ -14,6 +13,7 @@ import me.kumo.pixiv.BookmarkWorker;
 import me.kumo.pixiv.DownloadWorker;
 import me.kumo.ui.Refreshable;
 import me.kumo.ui.viewer.IllustrationViewer;
+import pixivj.model.Illustration;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -31,6 +31,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     public static final int MOUSE_DRAG_TOLERANCE = 25;
     private static boolean _global_on_drag = false;
     private static boolean _on_drag_set_to = false;
+
+    static {
+        ToolTipManager.sharedInstance().setInitialDelay(1000);
+    }
+
     public final GalleryImage image;
     private final ItemToolbar controls;
     protected IllustrationInfo info;
@@ -38,15 +43,6 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
     private MouseEvent mouseDownEvent;
     private boolean shown;
     private boolean selected = false;
-
-    static {
-        ToolTipManager.sharedInstance().setInitialDelay(1000);
-    }
-
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE);
-    }
 
     public GalleryItem() {
         setLayout(new OverlayLayout(this));
@@ -61,6 +57,11 @@ public class GalleryItem extends JPanel implements MouseListener, Refreshable<Il
                 LocalGallery.processImage(illustration.getId(), image);
             }
         });
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(GalleryImage.GRID_SIZE, GalleryImage.GRID_SIZE);
     }
 
     public Illustration getIllustration() {
