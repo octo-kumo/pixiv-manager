@@ -5,8 +5,14 @@ plugins {
 }
 
 group = 'me.kumo'
-version = '0.0.3'
-
+version = '0.0.4'
+jar {
+    manifest {
+        attributes 'SplashScreen-Image': 'icons/aqua.png',
+                'Implementation-Title': 'Pixiv Manager',
+                'Implementation-Version': project.version
+    }
+}
 application {
     mainClass = 'me.kumo.PixivManager'
 }

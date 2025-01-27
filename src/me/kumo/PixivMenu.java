@@ -15,6 +15,15 @@ public class PixivMenu extends JMenuBar {
             add(new JMenuItem("Pixiv Token") {{
                 addActionListener(e -> manager.askForToken(true));
             }});
+            add(new JMenuItem("Gallery Path") {{
+                addActionListener(e -> {
+                    String path = JOptionPane.showInputDialog(this, "Gallery Path", LocalGallery.PATH);
+                    if (path != null) {
+                        LocalGallery.setPath(path);
+                        PixivManager.preferences.put(PixivManager.GALLERY_PATH, path);
+                    }
+                });
+            }});
             add(new JCheckBoxMenuItem("Socks Proxy") {{
                 setSelected(PixivManager.getProxy() != null);
                 addActionListener(e -> {

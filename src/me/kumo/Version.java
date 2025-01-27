@@ -101,6 +101,7 @@ public class Version implements Comparable<Version> {
 
     private static void notifyLatest(Release latest) {
         Version version = new Version(latest.tag_name);
+        System.out.printf("\tCurrent version = %s%n", CURRENT);
         System.out.printf("\tLatest version = %s%n", version);
         int compare = CURRENT.compareTo(version);
         if (compare == 0) System.out.printf("\tCurrent version %s is latest!%n", CURRENT);
